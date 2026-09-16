@@ -70,19 +70,11 @@ language sql stable security definer set search_path = public, extensions as $$
 $$;
 
 drop policy if exists "practicigo members: read own or my studio as teacher" on public.practicigo_members;
-create policy "practicigo members: read own or my studio as teacher" on public.practicigo_members for select
-  using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'));
-
-drop policy if exists "practicigo studios: read mine" on public.practicigo_studios;
-create policy "practicigo studios: read mine" on public.practicigo_studios for select using (id = public.practicigo_my_studio());
-
-drop policy if exists "practicigo students: read own or my studio as teacher" on public.practicigo_students;
-create policy "practicigo students: read own or my studio as teacher" on public.practicigo_students for select
-  using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'));
+create policy "practicigo members: read own or my studio as teacher" on public.practicigo_members for select using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher')); drop policy if exists "practicigo studios: read mine" on public.practicigo_studios;
+create policy "practicigo studios: read mine" on public.practicigo_studios for select using (id = public.practicigo_my_studio()); drop policy if exists "practicigo students: read own or my studio as teacher" on public.practicigo_students;
+create policy "practicigo students: read own or my studio as teacher" on public.practicigo_students for select using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'));
 drop policy if exists "practicigo students: write own or my studio as teacher" on public.practicigo_students;
-create policy "practicigo students: write own or my studio as teacher" on public.practicigo_students for update
-  using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'))
-  with check (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'));
+create policy "practicigo students: write own or my studio as teacher" on public.practicigo_students for update using (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher')) with check (user_id = auth.uid() or (studio_id = public.practicigo_my_studio() and public.practicigo_my_role() = 'teacher'));
 
 -- A teacher creates a studio and gets a code to give pupils.
 create or replace function public.practicigo_create_studio(studio_name text, teacher_name text) returns text
@@ -212,13 +204,8 @@ insert into storage.buckets (id, name, public) values ('melodigo-audio', 'melodi
 drop policy if exists "melodigo audio: public read" on storage.objects;
 create policy "melodigo audio: public read" on storage.objects for select using (bucket_id = 'melodigo-audio');
 drop policy if exists "melodigo audio: members write" on storage.objects;
-create policy "melodigo audio: members write" on storage.objects for insert to authenticated
-  with check (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
+create policy "melodigo audio: members write" on storage.objects for insert to authenticated with check (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
 drop policy if exists "melodigo audio: members update" on storage.objects;
-create policy "melodigo audio: members update" on storage.objects for update to authenticated
-  using (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
+create policy "melodigo audio: members update" on storage.objects for update to authenticated using (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
 drop policy if exists "melodigo audio: members delete" on storage.objects;
-create policy "melodigo audio: members delete" on storage.objects for delete to authenticated
-  using (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
-
-commit;
+create policy "melodigo audio: members delete" on storage.objects for delete to authenticated using (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text); commit;
