@@ -1,4 +1,4 @@
-// Melodigo: turns a teacher's thirty-second lesson note (or a conductor's rehearsal note) into the pupil's week: three guided sessions
+// Practicigo: turns a teacher's thirty-second lesson note (or a conductor's rehearsal note) into the pupil's week: three guided sessions
 // (steps, minutes, what the teacher's voice says) and a checklist for the next lesson.
 import Anthropic from "@anthropic-ai/sdk";
 

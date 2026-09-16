@@ -30,7 +30,7 @@ function compose(data, today) {
   else if (last) opening = `Your last session was ${last.title}, on ${nice(last.at)}. No matter; today is a fresh start.`;
   else opening = `Your first session is waiting.`;
   const body = `${opening} Today is day ${next + 1} of ${w.sessions.length}: ${s.title}, about ${minutes} minutes, whenever suits you.`;
-  return { title: `${tn}, this morning`, body, next, minutes, url: process.env.APP_URL || "https://melodigo.vercel.app" };
+  return { title: `${tn}, this morning`, body, next, minutes, url: process.env.APP_URL || "https://practicigo.vercel.app" };
 }
 
 async function sendPush(sub, msg) {
@@ -40,7 +40,7 @@ async function sendPush(sub, msg) {
 async function sendEmail(to, msg, tn) {
   const key = process.env.RESEND_API_KEY; if (!key) throw new Error("email_not_configured");
   const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: process.env.REMINDER_FROM || "Melodigo <onboarding@resend.dev>", to: [to], subject: `${tn}: today's practice`, text: `${msg.body}\n\nOpen Melodigo: ${msg.url}\n\nYou get one of these on the mornings a session is due. Change it under Goal in the app.` }) });
+    body: JSON.stringify({ from: process.env.REMINDER_FROM || "Practicigo <onboarding@resend.dev>", to: [to], subject: `${tn}: today's practice`, text: `${msg.body}\n\nOpen Practicigo: ${msg.url}\n\nYou get one of these on the mornings a session is due. Change it under Goal in the app.` }) });
   if (!r.ok) throw new Error(`resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
 

@@ -1,6 +1,6 @@
 {
-  "name": "Melodigo",
-  "short_name": "Melodigo",
+  "name": "Practicigo",
+  "short_name": "Practicigo",
   "description": "One note closer. Couch to 5K for practising an instrument.",
   "start_url": "/",
   "display": "standalone",

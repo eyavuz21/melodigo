@@ -1,4 +1,4 @@
--- Melodigo: a studio is a teacher and their pupils. Each pupil's plan, sessions and flags live in one JSON document
+-- Practicigo: a studio is a teacher and their pupils. Each pupil's plan, sessions and flags live in one JSON document
 -- that the pupil and their teacher can both read and write. Run once in the SQL editor. Every object is prefixed melodigo_.
 
 create extension if not exists pgcrypto;
