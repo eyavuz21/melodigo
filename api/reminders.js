@@ -61,9 +61,9 @@ function adminClient() {
   if (!url || !key) return null;
   const h = { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" };
   return {
-    async all() { const r = await fetch(`${url}/rest/v1/melodigo_students?select=user_id,data`, { headers: h }); if (!r.ok) throw new Error(`students ${r.status}`); return r.json(); },
-    async one(id) { const r = await fetch(`${url}/rest/v1/melodigo_students?select=user_id,data&user_id=eq.${id}`, { headers: h }); const j = await r.json(); return j[0] || null; },
-    async save(id, data) { const r = await fetch(`${url}/rest/v1/melodigo_students?user_id=eq.${id}`, { method: "PATCH", headers: { ...h, prefer: "return=minimal" }, body: JSON.stringify({ data, updated_at: new Date().toISOString() }) }); if (!r.ok) throw new Error(`save ${r.status}`); },
+    async all() { const r = await fetch(`${url}/rest/v1/practicigo_students?select=user_id,data`, { headers: h }); if (!r.ok) throw new Error(`students ${r.status}`); return r.json(); },
+    async one(id) { const r = await fetch(`${url}/rest/v1/practicigo_students?select=user_id,data&user_id=eq.${id}`, { headers: h }); const j = await r.json(); return j[0] || null; },
+    async save(id, data) { const r = await fetch(`${url}/rest/v1/practicigo_students?user_id=eq.${id}`, { method: "PATCH", headers: { ...h, prefer: "return=minimal" }, body: JSON.stringify({ data, updated_at: new Date().toISOString() }) }); if (!r.ok) throw new Error(`save ${r.status}`); },
   };
 }
 

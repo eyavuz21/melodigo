@@ -84,8 +84,8 @@ Two kinds of account: teacher and pupil. There is no parent login. A young pupil
 - `api/reminders.js`: the morning message. GET from the cron (Authorization: Bearer CRON_SECRET) sends to every pupil due; POST from a signed-in pupil sends their own message now. Uses the Supabase service-role key server-side to read every pupil row
 - `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`: the installable app and its notifications
 - `api/config.js`: public Supabase config for the page, plus which features are configured
-- `supabase/schema.sql`: studios, members, one JSON document per pupil that the pupil and their teacher can both read and write, row-level security, the RPCs. Every database object is prefixed `melodigo_`
-- `logo.svg` (lockup with slogan), `wordmark.svg`, `mark.svg` (the flag-note), `icon-tile.svg`: outlines, no font needed
+- `supabase/schema.sql`: studios, members, one JSON document per pupil that the pupil and their teacher can both read and write, row-level security, the RPCs. Every database object is prefixed `practicigo_` (renamed from `melodigo_` on 16 September 2026 by `supabase/migrate-practicigo.sql`; the audio bucket keeps its id `melodigo-audio` because stored caption and recording URLs embed it).
+- `logo.svg` (lockup with slogan), `wordmark.svg`, `mark.svg` (the crotchet), `icon-tile.svg`: outlines, no font needed
 
 ## Deploying
 
@@ -117,7 +117,7 @@ Open `index.html` in a browser and choose "Try it on this device". Accounts and 
 
 ## The name
 
-*Practicigo* (from 16 September 2026; Melodigo before that, Sostenuto and Rosin before that): *practice* and *go*. Spelt with a c, the way people type it; practisigo redirects. The mark is the i before *go* drawn as a crotchet: a note, no flag, nobody racing anybody. Black and white, like a piano, like the page. The line under it: *One note closer.* The database keeps the `melodigo_` prefix and the `melodigo-audio` bucket; nobody sees those.
+*Practicigo* (from 16 September 2026; Melodigo before that, Sostenuto and Rosin before that): *practice* and *go*. Spelt with a c, the way people type it; practisigo redirects. The mark is the i before *go* drawn as a crotchet: a note, no flag, nobody racing anybody. Black and white, like a piano, like the page. The line under it: *One note closer.* The database objects are `practicigo_*`; only the audio bucket id, `melodigo-audio`, keeps the old word, because every stored audio URL embeds it.
 
 ## Founders
 

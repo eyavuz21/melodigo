@@ -1,3 +1,33 @@
+-- Practicigo: rename the database objects from the melodigo_ prefix. Run once in the Supabase SQL editor, before the
+-- db-rename branch is deployed. Data is untouched: the three tables are renamed in place; functions and policies are
+-- dropped and recreated under the new names by the schema that follows. The audio bucket keeps its id 'melodigo-audio'
+-- because every caption and recording URL already stored in pupils' documents embeds it; renaming it would break playback.
+begin;
+
+alter table if exists public.melodigo_studios  rename to practicigo_studios;
+alter table if exists public.melodigo_members  rename to practicigo_members;
+alter table if exists public.melodigo_students rename to practicigo_students;
+
+drop policy if exists "melodigo members: read own or my studio as teacher" on public.practicigo_members;
+drop policy if exists "melodigo studios: read mine" on public.practicigo_studios;
+drop policy if exists "melodigo students: read own or my studio as teacher" on public.practicigo_students;
+drop policy if exists "melodigo students: write own or my studio as teacher" on public.practicigo_students;
+drop policy if exists "melodigo audio: public read" on storage.objects;
+drop policy if exists "melodigo audio: members write" on storage.objects;
+drop policy if exists "melodigo audio: members update" on storage.objects;
+drop policy if exists "melodigo audio: members delete" on storage.objects;
+
+drop function if exists public.melodigo_students_list();
+drop function if exists public.melodigo_save_student(uuid, jsonb);
+drop function if exists public.melodigo_create_studio(text, text);
+drop function if exists public.melodigo_join_studio(text, text);
+drop function if exists public.melodigo_me();
+drop function if exists public.melodigo_set_voice(text, text);
+drop function if exists public.melodigo_clear_voice();
+drop function if exists public.melodigo_my_role();
+drop function if exists public.melodigo_my_studio();
+
+-- ---------------------------------------------------------------- the schema, new names (identical to supabase/schema.sql)
 -- Practicigo: a studio is a teacher and their pupils. Each pupil's plan, sessions and flags live in one JSON document
 -- that the pupil and their teacher can both read and write. Run once in the SQL editor. Every object is prefixed practicigo_.
 
@@ -190,3 +220,5 @@ create policy "melodigo audio: members update" on storage.objects for update to 
 drop policy if exists "melodigo audio: members delete" on storage.objects;
 create policy "melodigo audio: members delete" on storage.objects for delete to authenticated
   using (bucket_id = 'melodigo-audio' and (storage.foldername(name))[1] = public.practicigo_my_studio()::text);
+
+commit;

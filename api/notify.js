@@ -18,13 +18,13 @@ export default async function handler(req, res) {
   const day = Number(body.day) || 0, of = Number(body.of) || 0, minutes = Number(body.minutes) || 0;
 
   // the pupil's own row: is the teacher asking to be told?
-  const sr = await fetch(`${url}/rest/v1/melodigo_students?select=studio_id,data&user_id=eq.${who.user.id}`, { headers: h });
+  const sr = await fetch(`${url}/rest/v1/practicigo_students?select=studio_id,data&user_id=eq.${who.user.id}`, { headers: h });
   const srow = (await sr.json())[0]; if (!srow) return res.status(404).json({ error: "no_pupil" });
   if (!srow.data?.profile?.notifyFinish) return res.status(200).json({ sent: false, reason: "not_requested" });
   const name = srow.data?.profile?.name || "Your pupil";
 
   // the studio's teacher, then their email
-  const st = await fetch(`${url}/rest/v1/melodigo_studios?select=teacher_id,name&id=eq.${srow.studio_id}`, { headers: h });
+  const st = await fetch(`${url}/rest/v1/practicigo_studios?select=teacher_id,name&id=eq.${srow.studio_id}`, { headers: h });
   const studio = (await st.json())[0]; if (!studio) return res.status(404).json({ error: "no_studio" });
   const ur = await fetch(`${url}/auth/v1/admin/users/${studio.teacher_id}`, { headers: h });
   if (!ur.ok) return res.status(502).json({ error: "auth", message: `auth ${ur.status}` });

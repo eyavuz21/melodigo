@@ -8,7 +8,7 @@ export async function whoAmI(req) {
   const u = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, authorization: `Bearer ${token}` } });
   if (!u.ok) return null;
   const user = await u.json();
-  const m = await fetch(`${url}/rest/v1/rpc/melodigo_me`, { method: "POST", headers: { apikey: key, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: "{}" });
+  const m = await fetch(`${url}/rest/v1/rpc/practicigo_me`, { method: "POST", headers: { apikey: key, authorization: `Bearer ${token}`, "content-type": "application/json" }, body: "{}" });
   const me = m.ok ? await m.json() : null;
   return { user, me, token };
 }

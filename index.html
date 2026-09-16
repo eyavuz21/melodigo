@@ -263,18 +263,18 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   async function saveStudent(st){
     if(mode==='local'){ const o=loadLocal()||{}; o.doc=st.data; saveLocal(o); return; }
     if(mode==='demo'){ try{ localStorage.setItem('practicigo.demo.v1', JSON.stringify(students)); }catch(e){} return; }
-    const {error}=await sb.rpc('melodigo_save_student',{target:st.user_id, doc:st.data}); if(error){ console.warn(error); throw error; }
+    const {error}=await sb.rpc('practicigo_save_student',{target:st.user_id, doc:st.data}); if(error){ console.warn(error); throw error; }
   }
   async function saveCurrent(){
     if(!current) return;
     if(mode==='local'){ const o=loadLocal()||{}; o.doc=current.data; saveLocal(o); return; }
     if(mode==='demo'){ try{ localStorage.setItem('practicigo.demo.v1', JSON.stringify(students)); }catch(e){} return; }
-    clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ const {error}=await sb.rpc('melodigo_save_student',{target:current.user_id, doc:current.data}); if(error){ console.warn(error); toast('Could not save. Check your connection.'); } }, 500);
+    clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ const {error}=await sb.rpc('practicigo_save_student',{target:current.user_id, doc:current.data}); if(error){ console.warn(error); toast('Could not save. Check your connection.'); } }, 500);
   }
   async function refresh(){
     if(mode==='local'){ const o=loadLocal()||{}; if(!o.doc) o.doc=blankDoc(o.me?.name||'Me'); students=[{user_id:'local', data:o.doc}]; saveLocal(o); return; }
     if(mode==='demo') return;
-    const {data,error}=await sb.rpc('melodigo_students_list'); if(error){ console.warn(error); return; }
+    const {data,error}=await sb.rpc('practicigo_students_list'); if(error){ console.warn(error); return; }
     students=(data||[]).map(r=>({user_id:r.user_id, data:Object.assign(blankDoc(''), r.data||{})}));
   }
 
@@ -678,9 +678,9 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     $('#recStop').onclick=async()=>{ clearInterval(tmr); blob=await recordStop(); $('#recStart').disabled=false; $('#recStop').disabled=true; $('#recInd').hidden=true; const a=$('#recPlay'); a.src=URL.createObjectURL(blob); a.hidden=false; const secs=(Date.now()-t0)/1000; $('#voiceUse').disabled=secs<20; $('#voiceStatus').textContent=secs<20?'That was under twenty seconds. Read the whole passage.':'Listen back. If it sounds like you, use it.'; };
     $('#voiceUse').onclick=async()=>{ if(!blob) return; const st=$('#voiceStatus'); st.textContent='Making your voice… (about 20 seconds)'; $('#voiceUse').disabled=true;
       try{ const r=await fetch('/api/voice',{method:'POST',headers:{'content-type':'application/json',...(await authHeaders())},body:JSON.stringify({audio:await toB64(blob), mime:blob.type, name:me.name||'Teacher'})}); const j=await r.json(); if(!r.ok) throw new Error(j.message||'Could not create the voice');
-        const {error}=await sb.rpc('melodigo_set_voice',{vid:j.voice_id, vname:me.name||'Teacher'}); if(error) throw error; me.voice_ready=true; me.voice_id=j.voice_id; me.voice_name=me.name||'Teacher'; toast('Your voice is set.'); renderVoice(); }
+        const {error}=await sb.rpc('practicigo_set_voice',{vid:j.voice_id, vname:me.name||'Teacher'}); if(error) throw error; me.voice_ready=true; me.voice_id=j.voice_id; me.voice_name=me.name||'Teacher'; toast('Your voice is set.'); renderVoice(); }
       catch(e){ st.textContent=e.message; $('#voiceUse').disabled=false; } };
-    const del=$('#voiceDel'); if(del) del.onclick=async()=>{ if(!confirm('Remove your voice? The clone is deleted and new weeks use the built-in voice.')) return; try{ await fetch('/api/voice',{method:'DELETE',headers:{'content-type':'application/json',...(await authHeaders())},body:JSON.stringify({voice_id:me.voice_id})}); const {error}=await sb.rpc('melodigo_clear_voice'); if(error) throw error; me.voice_ready=false; me.voice_id=null; toast('Voice removed.'); renderVoice(); }catch(e){ alert(e.message); } };
+    const del=$('#voiceDel'); if(del) del.onclick=async()=>{ if(!confirm('Remove your voice? The clone is deleted and new weeks use the built-in voice.')) return; try{ await fetch('/api/voice',{method:'DELETE',headers:{'content-type':'application/json',...(await authHeaders())},body:JSON.stringify({voice_id:me.voice_id})}); const {error}=await sb.rpc('practicigo_clear_voice'); if(error) throw error; me.voice_ready=false; me.voice_id=null; toast('Voice removed.'); renderVoice(); }catch(e){ alert(e.message); } };
     show('voice');
   }
 
@@ -946,7 +946,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     renderAuth(); setTabs('student'); renderToday();
   }
   async function enterCloud(){
-    const {data:meta,error}=await sb.rpc('melodigo_me'); if(error){ console.warn(error); }
+    const {data:meta,error}=await sb.rpc('practicigo_me'); if(error){ console.warn(error); }
     if(!meta){ renderAuth(); show('onboard'); return; }
     me={...meta, email:sbUser.email}; mode='cloud'; await refresh();
     renderAuth();
@@ -963,8 +963,8 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   $('#landSignin').onclick=()=>{ if(sb) signInDialog(); else alert('Sign-in needs the live site with accounts configured. You can still try it on this device.'); };
   $('#landLocal').onclick=enterLocal;
   $('#landDemo').onclick=enterDemo;
-  $('#obCreate').onclick=async()=>{ const st=$('#obStatus'); st.textContent='Creating…'; const {data,error}=await sb.rpc('melodigo_create_studio',{studio_name:$('#obStudio').value.trim(), teacher_name:$('#obTName').value.trim()}); if(error){ st.textContent=error.message; return; } st.textContent=''; toast('Studio created. Your code is '+data+'.'); await enterCloud(); if(cfg?.voice) renderVoice(); };
-  $('#obJoin').onclick=async()=>{ const st=$('#obStatus'); st.textContent='Joining…'; const {data,error}=await sb.rpc('melodigo_join_studio',{join_code:$('#obCode').value.trim(), student_name:$('#obSName').value.trim()}); if(error){ st.textContent=error.message; return; } st.textContent=''; toast('Welcome to '+data+'.'); await enterCloud(); };
+  $('#obCreate').onclick=async()=>{ const st=$('#obStatus'); st.textContent='Creating…'; const {data,error}=await sb.rpc('practicigo_create_studio',{studio_name:$('#obStudio').value.trim(), teacher_name:$('#obTName').value.trim()}); if(error){ st.textContent=error.message; return; } st.textContent=''; toast('Studio created. Your code is '+data+'.'); await enterCloud(); if(cfg?.voice) renderVoice(); };
+  $('#obJoin').onclick=async()=>{ const st=$('#obStatus'); st.textContent='Joining…'; const {data,error}=await sb.rpc('practicigo_join_studio',{join_code:$('#obCode').value.trim(), student_name:$('#obSName').value.trim()}); if(error){ st.textContent=error.message; return; } st.textContent=''; toast('Welcome to '+data+'.'); await enterCloud(); };
 
   (async()=>{
     if(!location.protocol.startsWith('http')){ $('#landNote').textContent='Opened as a file: accounts are off, but everything else works on this device.'; return; }
