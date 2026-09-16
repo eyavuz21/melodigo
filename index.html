@@ -60,6 +60,8 @@ header.top{display:flex; align-items:center; justify-content:space-between; gap:
 .box{padding:18px 20px; border-radius:24px; border:1.5px solid var(--line); margin-bottom:14px}
 .light{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin:0 5px 2px 0;background:var(--muted)}
 .light.g{background:#2E8B57}.light.a{background:#D98A00}.light.r{background:var(--danger)}
+.jmap .wash{opacity:.09}.jmap .wash.g{fill:#2E8B57}.jmap .wash.a{fill:#D98A00}.jmap .wash.r{fill:#B00020}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .jmap .wash{opacity:.18} } :root[data-theme="dark"] .jmap .wash{opacity:.18}
 #fermata{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:60;text-align:center;padding:24px;cursor:pointer}
 #fermata.on{display:flex}
 #fermata svg{width:160px;height:110px;margin-bottom:18px}
@@ -378,7 +380,9 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const note=(x,y,filled,ring,sc)=>`<g transform="translate(${x} ${y}) scale(${sc})">${ring?'<circle r="19" fill="none" stroke="var(--amber)" stroke-width="3"/>':''}<ellipse rx="10" ry="7" transform="rotate(-22)" fill="${filled?'var(--varnish)':'var(--card)'}" stroke="var(--varnish)" stroke-width="2"/><rect x="8" y="-38" width="2.5" height="38" fill="var(--varnish)"/></g>`;
     const coin=(x,y,on,label)=>`<g transform="translate(${x} ${y})"><circle r="11" fill="${on?'var(--varnish)':'var(--card)'}" stroke="var(--varnish)" stroke-width="1.5"/><text y="4" text-anchor="middle" style="font-size:11px;font-weight:800;fill:${on?'var(--card)':'var(--muted)'}">${label||'+1'}</text></g>`;
     const cut=t=>t.length>24?t.slice(0,23)+'…':t;
-    let out=`<svg class="jmap" viewBox="0 0 ${W} ${H}" role="img" aria-label="${doneCount(w)} of ${N} days done, then the lesson">
+    const gl=goalLight(); // the ground the path runs across takes the goal's colour: a wash, the notes and words stay black
+    let out=`<svg class="jmap" viewBox="0 0 ${W} ${H}" role="img" aria-label="${doneCount(w)} of ${N} days done, then the lesson${gl?'; '+gl.word.toLowerCase():''}">
+      ${gl?`<rect class="wash ${gl.k}" x="0" y="0" width="${W}" height="${H}" rx="22"/>`:''}
       <path d="${path}" fill="none" stroke="var(--line)" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 10"/>
       ${part!=='bottom'?`<rect x="70" y="6" width="220" height="40" rx="12" fill="var(--card)" stroke="var(--varnish)" stroke-width="2"/><text x="180" y="31" text-anchor="middle" class="t">Lesson · ${h(fmt(start))}</text>`:''}`;
     ks.forEach(k=>{ const sess=w.sessions[k]; const x=sx(k), y=sy(k), left=k%2===0, done=d.has(k), now=k===nx; const lx=left?x+34:x-34; const anchor=left?'start':'end';
