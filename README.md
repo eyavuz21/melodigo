@@ -4,7 +4,7 @@
 
 **One note closer.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Practicigo gets you to practise every day.
 
-**Live:** https://practicigo.vercel.app
+**Live:** https://practicigo.app
 
 ## The idea
 

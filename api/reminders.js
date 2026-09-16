@@ -30,7 +30,7 @@ function compose(data, today) {
   else if (last) opening = `Your last session was ${last.title}, on ${nice(last.at)}. No matter; today is a fresh start.`;
   else opening = `Your first session is waiting.`;
   const body = `${opening} Today is day ${next + 1} of ${w.sessions.length}: ${s.title}, about ${minutes} minutes, whenever suits you.`;
-  return { title: `${tn}, this morning`, body, next, minutes, url: process.env.APP_URL || "https://practicigo.vercel.app" };
+  return { title: `${tn}, this morning`, body, next, minutes, url: process.env.APP_URL || "https://practicigo.app" };
 }
 
 async function sendPush(sub, msg) {
