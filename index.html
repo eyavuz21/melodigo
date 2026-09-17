@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stuckato</title>
-<meta name="description" content="One bit at a time. Couch to 5K for practising an instrument, in a choir or in an orchestra. Your teacher sets the week; Stuckato gets you to practise every day.">
+<meta name="description" content="Short bursts. Real progress. Couch to 5K for practising an instrument, in a choir or in an orchestra. Your teacher sets the week; Stuckato gets you to practise every day.">
 <link rel="icon" type="image/svg+xml" href="icon-tile.svg?v=5"><link rel="apple-touch-icon" href="icon-192.png?v=5"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111111">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
@@ -64,6 +64,15 @@ header.top{display:flex; align-items:center; justify-content:space-between; gap:
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .jmap .wash{opacity:.18} } :root[data-theme="dark"] .jmap .wash{opacity:.18}
 #fermata{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:60;text-align:center;padding:24px;cursor:pointer}
 #fermata.on{display:flex}
+#modal{position:fixed;inset:0;background:rgba(17,17,17,.55);display:none;align-items:flex-end;justify-content:center;z-index:70;padding:16px}
+#modal.on{display:flex}
+#modal .sheet{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;width:100%;max-width:520px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#modal .sheet h3{margin:0 0 6px;font-size:22px;line-height:1.15}
+#modal .sheet p{margin:0 0 12px;font-size:16px;color:var(--ink)}
+#modal .feel{grid-template-columns:1fr 1fr}
+#modal .feel button.wide{grid-column:1 / -1}
+#modal .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+#modal .btns .btn{flex:1}
 #fermata svg{width:160px;height:110px;margin-bottom:18px}
 .reflect textarea{min-height:92px}
 .btn[hidden],audio[hidden]{display:none}
@@ -154,7 +163,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 <div class="wrap">
   <div id="demoBar" hidden></div>
   <header class="top">
-    <div class="brand"><h1><img src="wordmark.svg?v=5" alt="Stuckato" style="height:40px;display:block"></h1><small>One bit at a time.</small></div>
+    <div class="brand"><h1><img src="wordmark.svg?v=6" alt="Stuckato" style="height:40px;display:block"></h1><small>Short bursts. Real progress.</small></div>
     <div class="auth" id="auth"></div>
   </header>
 
@@ -199,6 +208,14 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     <div class="row" style="margin-top:12px"><button class="btn quiet sm" id="pause">Pause</button><button class="btn quiet sm" id="skip">Next step</button><button class="btn danger sm" id="quit">Stop</button>
       <label class="switch"><input type="checkbox" id="speak" checked> Voice</label><label class="switch"><input type="checkbox" id="demo"> Demo speed</label></div>
   </section>
+  <!-- STUDENT: OWN TIME (the clock runs from Start to Finish) -->
+  <section class="view" id="v-own">
+    <div class="eyebrow">Practising on my own</div>
+    <h2 class="big" id="ownTitle" style="font-size:28px"></h2>
+    <div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--line)" stroke-width="6"/><circle id="ownArc" cx="50" cy="50" r="44" fill="none" stroke="var(--amber)" stroke-width="6" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg><div class="t"><div><b id="ownClock">0:00</b><span id="ownAim"></span></div></div></div>
+    <p class="note" style="text-align:center;margin:0 0 14px">The clock started when you tapped Start. Tap Finish when you stop, even if it was shorter than planned.</p>
+    <button class="btn block" id="ownFinish">Finish practising</button>
+  </section>
   <!-- STUDENT: DONE -->
   <section class="view" id="v-done">
     <div class="card"><div class="label">Session done</div><h2 class="big" id="doneTitle"></h2><p id="doneSub" style="margin:0"></p></div>
@@ -227,6 +244,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   <section class="view" id="v-message"></section>
 
   <div id="fermata" role="dialog" aria-label="Pause. Take a break."><svg viewBox="0 0 160 110" aria-hidden="true"><path d="M12 92 A68 68 0 0 1 148 92" fill="none" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="82" r="9" fill="var(--ink)"/></svg><div class="quote">Pause.</div><p style="margin:6px 0 0">Take a break.</p><p class="note">Tap to carry on</p></div>
+  <div id="modal" role="dialog" aria-modal="true"><div class="sheet"><div class="label" id="modalLabel"></div><h3 id="modalTitle"></h3><p id="modalText"></p><div id="modalBody"></div><div class="btns" id="modalBtns"></div></div></div>
   <nav class="tabs" id="tabs" hidden></nav>
   <div id="startbar" hidden></div>
 </div>
@@ -429,7 +447,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const lastDone=(w.done||[]).slice(-1)[0]; const mins=p.minutes||levelMinutes(p.level); const tk=tokensView(); const flags=doc().flags||[];
     const todayCard = s ? `<div class="card" style="border-color:var(--ink)"><div class="label" style="color:var(--ink)">Today · day ${i+1} of ${w.sessions.length} · ${h(fmt(today()))}</div><p><b>${h(s.title)}</b>. ${h(s.intro)}</p><p>${h(s.steps.map(x=>x.name).join(' · '))}</p>
         ${lastDone?`<p class="note" style="margin:0 0 10px">Last time, ${h(fmt(lastDone.at.slice(0,10)))}: it felt ${h((lastDone.feel||'').toLowerCase())}${(lastDone.worked||[]).length?`; you worked on ${h(lastDone.worked.join(', '))}`:''}.</p>`:''}
-        <button class="btn block" id="start">Start the guided session · ${s.steps.reduce((a,x)=>a+(+x.minutes||0),0)} min</button><button class="btn block quiet" id="tickOnly" style="margin-top:8px">I practised on my own: tick what I did</button></div>`
+        <button class="btn block" id="start">Start the guided session · ${s.steps.reduce((a,x)=>a+(+x.minutes||0),0)} min</button><button class="btn block quiet" id="ownStart" style="margin-top:8px">Practise on my own · start the clock</button></div>`
       : `<div class="card" style="border-color:var(--ink)"><div class="label">${w.recording?'Week complete':'All days done'}</div><p style="margin:0">${w.recording?`All ${w.sessions.length} days done and the play-through sent. Next lesson ${h(fmt(w.nextLesson))}. Rest.`:`All ${w.sessions.length} days done. One thing left before ${h(tn)} hears you on ${h(fmt(w.nextLesson))}: the play-through, below.`}</p></div>`;
     const pend=pendingDone(w);
     const pendCard = pend ? `<div class="card" style="border-color:var(--danger)"><div class="label" style="color:var(--danger)">Day ${pend.i+1} isn't finished</div><p style="margin:0 0 10px">You practised${pend.at?' on '+h(fmt(pend.at.slice(0,10))):''} but didn't write what changed. No token until you do.</p><button class="btn block" id="finishPend">Write the sentence</button></div>` : '';
@@ -457,10 +475,10 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
         <form id="flagForm" class="row" style="margin-top:8px"><input id="flagText" placeholder="e.g. G string squeaks on down bows" style="flex:1"><button class="btn sm" type="submit">Flag it</button></form>
         <div class="note">${h(tn)} sees these before the lesson starts.</div></div>
       <div class="grid2" style="margin-top:4px"><button class="btn quiet" id="goGoal">Set or change the goal</button><button class="btn" id="goShare">Share the card</button></div>`;
-    const to=$('#tickOnly'); if(to) to.onclick=()=>{ si=i; sess=w.sessions[i]; finish(true); };
+    const os=$('#ownStart'); if(os) os.onclick=()=>ready(()=>startOwn(i));
     const fp=$('#finishPend'); if(fp) fp.onclick=()=>{ si=pend.i; sess=w.sessions[pend.i]; showDone(); };
     wireRecording(w, tn);
-    const b=$('#start'); if(b) b.onclick=()=>startSession(i);
+    const b=$('#start'); if(b) b.onclick=()=>ready(()=>startSession(i));
     $('#goGoal').onclick=()=>renderGoal(true); $('#goShare').onclick=()=>renderShare(true);
     $$('[data-xdone]').forEach(x=>x.onclick=()=>{ const e=extras().find(y=>y.id===x.dataset.xdone); if(e){ e.done=true; e.doneAt=new Date().toISOString(); } saveCurrent(); renderTrail(); toast('Done. Nice.'); });
     $$('#prep li[data-k]').forEach(li=>li.onclick=()=>{ w.ticks=w.ticks||[]; const k=+li.dataset.k; w.ticks=w.ticks.includes(k)?w.ticks.filter(x=>x!==k):[...w.ticks,k]; saveCurrent(); renderTrail(false); });
@@ -475,6 +493,24 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 
   // ------------------------------------------------------------ session runner
   let si=0, stepI=0, left=0, total=0, timer=null, paused=false, sess=null;
+  let sessStart=0, ownTimer=null; // when the current session (guided or own time) began, and the own-time clock
+  const planMinutes=s=>Math.max(1, Math.round((s&&s.steps||[]).reduce((a,x)=>a+(+x.minutes||0),0) || doc().profile.minutes || levelMinutes(doc().profile.level) || 10));
+  const elapsedMinutes=()=>Math.max(1, Math.round((Date.now()-sessStart)/60000));
+  const REASONS=['Ran out of time','Got stuck','Too tired','Something came up','Not in the mood'];
+  function modal(o){ // o: {label,title,text,body,buttons:[{label,cls,onClick}]}; the sheet closes after any button
+    const m=$('#modal'); $('#modalLabel').textContent=o.label||''; $('#modalTitle').textContent=o.title||''; $('#modalText').textContent=o.text||''; $('#modalBody').innerHTML=o.body||'';
+    const bt=$('#modalBtns'); bt.innerHTML=''; (o.buttons||[]).forEach(b=>{ const el=document.createElement('button'); el.className='btn '+(b.cls||''); el.textContent=b.label; el.onclick=()=>{ if(b.onClick&&b.onClick()===false) return; m.classList.remove('on'); }; bt.appendChild(el); });
+    m.classList.add('on'); }
+  function ready(cb){ // the quiet-room prompt, before every session
+    modal({label:'Before you start', title:'Find a quiet room.', text:'Please make sure you are in a quiet room, free from distractions. Phone on silent, music stand up, instrument out.', buttons:[{label:'Not now',cls:'quiet'},{label:'I\'m ready',onClick:cb}]}); }
+  function shortReason(mins, target, cb){ // a short session: what got in the way? The teacher sees the answer.
+    let reason=''; const body=`<div class="feel" id="reasons">${REASONS.map(r=>`<button type="button" data-r="${h(r)}">${h(r)}</button>`).join('')}<button type="button" class="wide" data-r="other">Something else</button></div><input id="reasonOther" placeholder="In a few words" style="display:none;margin-bottom:8px">`;
+    modal({label:'Shorter than planned', title:`${mins} of ${target} minutes.`, text:'That still counts. What got in the way? Your teacher sees this, and it helps them set the right week.', body,
+      buttons:[{label:'Save',onClick:()=>{ const o=$('#reasonOther'); const r=reason==='other'?(o.value.trim()||'Something else'):reason; if(!r){ toast('Pick a reason first.'); return false; } cb(r); }}]});
+    $$('#reasons button').forEach(b=>b.onclick=()=>{ $$('#reasons button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); reason=b.dataset.r; const o=$('#reasonOther'); o.style.display=reason==='other'?'block':'none'; if(reason==='other') o.focus(); }); }
+  function ownTick(){ const sec=Math.floor((Date.now()-sessStart)/1000); $('#ownClock').textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`; const aim=planMinutes(sess)*60; $('#ownArc').style.strokeDashoffset=ARC*Math.max(0,1-sec/aim); }
+  function startOwn(i){ const w=week(); si=i; sess=w.sessions[i]; sessStart=Date.now(); $('#ownTitle').textContent=sess.title; $('#ownAim').textContent=`aim ${planMinutes(sess)} min`; ownTick(); clearInterval(ownTimer); ownTimer=setInterval(ownTick,1000); show('own'); }
+  $('#ownFinish').onclick=()=>{ clearInterval(ownTimer); const mins=elapsedMinutes(), target=planMinutes(sess); if(mins<target) shortReason(mins,target,r=>finish(true,{minutes:mins,target,short:true,reason:r})); else finish(true,{minutes:mins,target,short:false}); };
   const ARC=276.5;
   const player=new Audio();
   function speak(text, url){
@@ -492,20 +528,21 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   }
   function tick(){ const real=$('#demo').checked?Math.round((+sess.steps[stepI].minutes||1)*60*(left/total)):left; $('#clock').textContent=`${Math.floor(real/60)}:${String(real%60).padStart(2,'0')}`; $('#arc').style.strokeDashoffset=ARC*(1-left/total); }
   function run(){ clearInterval(timer); timer=setInterval(()=>{ if(paused) return; left--; tick(); if(left<=0) nextStep(); },1000); }
-  function nextStep(){ stepI++; if(stepI>=sess.steps.length){ fermata(()=>finish()); return; } stepInit(); }
+  function nextStep(){ stepI++; if(stepI>=sess.steps.length){ fermata(()=>finish(false,{minutes:elapsedMinutes(),target:planMinutes(sess),short:false})); return; } stepInit(); }
   function fermata(cb){ // the sign at the end of the session: hold, breathe, then the Done screen. Tap to go on sooner.
     clearInterval(timer); try{ speechSynthesis.cancel(); player.pause(); }catch(e){}
     const f=$('#fermata'); let gone=false; const go=()=>{ if(gone) return; gone=true; f.classList.remove('on'); f.onclick=null; cb(); };
     f.classList.add('on'); f.onclick=go; setTimeout(go, 6000); }
-  function startSession(i){ const w=week(); si=i; sess=w.sessions[i]; stepI=0; paused=false; $('#pause').textContent='Pause'; $('#sessTitle').textContent=sess.title; $('#speak').checked=true; stepInit(); run(); show('session'); }
-  function finish(ownTime){
-    clearInterval(timer); try{ speechSynthesis.cancel(); player.pause(); }catch(e){}
-    const w=week(); w.done=w.done||[]; if(!w.done.some(x=>x.i===si)) w.done.push({i:si, at:new Date().toISOString(), feel:'', worked:[], own:!!ownTime});
+  function startSession(i){ const w=week(); si=i; sess=w.sessions[i]; stepI=0; paused=false; sessStart=Date.now(); $('#pause').textContent='Pause'; $('#sessTitle').textContent=sess.title; $('#speak').checked=true; stepInit(); run(); show('session'); }
+  function finish(ownTime, t){ // t: {minutes,target,short,reason} from the clock; the day is recorded even when it was short
+    clearInterval(timer); clearInterval(ownTimer); try{ speechSynthesis.cancel(); player.pause(); }catch(e){}
+    const w=week(); w.done=w.done||[]; const rec={i:si, at:new Date().toISOString(), startedAt:new Date(sessStart||Date.now()).toISOString(), feel:'', worked:[], own:!!ownTime, ...(t||{})};
+    const ex=w.done.find(x=>x.i===si); if(ex){ Object.assign(ex, {startedAt:rec.startedAt, minutes:rec.minutes, target:rec.target, short:rec.short, reason:rec.reason}); } else w.done.push(rec);
     saveCurrent(); showDone();
   }
   function showDone(){ // the Done screen for session si: what you did, your sentence, how it felt. The token comes with the sentence.
     const w=week(); const d=(w.done||[]).find(x=>x.i===si)||{};
-    $('#doneTitle').textContent=`Day ${doneCount(w)} of ${w.sessions.length}.`+(streak()>0?` That's ${streak()} in a row.`:''); $('#doneSub').textContent=(d.own?'Practised on your own. ':`${sess.steps.reduce((a,x)=>a+(+x.minutes||0),0)} minutes. `)+(d.note?'':'Write what changed and the token is yours.');
+    $('#doneTitle').textContent=`Day ${doneCount(w)} of ${w.sessions.length}.`+(streak()>0?` That's ${streak()} in a row.`:''); $('#doneSub').textContent=(d.minutes?`${d.minutes} of ${d.target||planMinutes(sess)} minutes${d.own?', on your own':''}. `:(d.own?'Practised on your own. ':`${sess.steps.reduce((a,x)=>a+(+x.minutes||0),0)} minutes. `))+(d.short?'Shorter than planned; your teacher will see why. ':'')+(d.note?'':'Write what changed and the token is yours.');
     $('#reflWho').textContent=doc().teacherName||'your teacher'; $('#refl').value=d.note||''; $('#refl').dataset.via=d.noteVia||''; updateReflBtn();
     renderWorked(); $$('#feel button').forEach(b=>{ b.classList.toggle('on', b.dataset.f===d.feel); }); $('#tailor').hidden=true; show('done');
   }
@@ -521,7 +558,9 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   $('#workedOther').onsubmit=e=>{ e.preventDefault(); const t=$('#workedText').value.trim(); if(!t) return; const w=week(); const d=(w.done||[]).find(x=>x.i===si); d.worked=[...(d.worked||[]),t]; w.work=[...(w.work||[]),t]; $('#workedText').value=''; saveCurrent(); renderWorked(); };
   $('#pause').onclick=e=>{ paused=!paused; e.target.textContent=paused?'Resume':'Pause'; if(paused){ try{ speechSynthesis.pause(); player.pause(); }catch(x){} } else { try{ speechSynthesis.resume(); if(player.src&&player.currentTime>0&&!player.ended) player.play().catch(()=>{}); }catch(x){} } };
   $('#skip').onclick=()=>nextStep();
-  $('#quit').onclick=()=>{ clearInterval(timer); try{ speechSynthesis.cancel(); player.pause(); }catch(e){} renderToday(); };
+  $('#quit').onclick=()=>{ clearInterval(timer); try{ speechSynthesis.cancel(); player.pause(); }catch(e){}
+    const secs=(Date.now()-sessStart)/1000; if(secs<60){ renderToday(); return; }
+    const mins=elapsedMinutes(), target=planMinutes(sess); shortReason(mins,target,r=>finish(false,{minutes:mins,target,short:true,reason:r})); };
   $$('#feel button').forEach(b=>b.onclick=()=>{ $$('#feel button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); const w=week(); const d=(w.done||[]).find(x=>x.i===si); if(d) d.feel=b.dataset.f; saveCurrent();
     const t=$('#tailor'); t.hidden=false;
     if(b.dataset.f==='Hard'){ // one more tap: which bit? It goes to the teacher as a flag for the next lesson.
@@ -717,7 +756,8 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       ${w?`<div class="card"><div class="label">This week</div>${staveWeek(w)}<div class="note" style="margin:0">${doneCount(w)} of ${w.sessions.length} days done · felt: ${(w.done||[]).map(x=>x.feel).filter(Boolean).join(', ')||'nothing logged yet'} · next lesson ${h(fmt(w.nextLesson))}</div>
         ${workTally(w).length?`<div class="label" style="margin-top:12px">Worked on most this week</div><ul class="ticks" style="margin-top:4px">${workTally(w).map(([it,c])=>`<li style="cursor:default"><span style="flex:1">${h(it)}</span><span class="pill on">${c} ${c===1?'day':'days'}</span></li>`).join('')}</ul>`:'<div class="note">What the pupil ticks after each session appears here, most-worked first, so you can plan the lesson.</div>'}
         <div class="label" style="margin-top:12px">What they wrote, day by day</div>
-        ${(w.done||[]).length?(w.done||[]).slice().sort((a,b)=>a.i-b.i).map(x=>`<div class="daybox"><p style="margin:0"><b>Day ${x.i+1}${w.sessions[x.i]?' · '+h(w.sessions[x.i].title):''}</b> · ${h(fmt((x.at||'').slice(0,10)))}${x.at?' '+h(timeOf(x.at)):''}${x.feel?' · felt '+h(x.feel.toLowerCase()):''}${x.own?' · own time':''}${(x.worked||[]).length?' · '+h(x.worked.join(', ')):''}</p>
+        ${(w.done||[]).length?(w.done||[]).slice().sort((a,b)=>a.i-b.i).map(x=>`<div class="daybox"><p style="margin:0"><b>Day ${x.i+1}${w.sessions[x.i]?' · '+h(w.sessions[x.i].title):''}</b> · ${h(fmt((x.at||'').slice(0,10)))}${x.at?' '+h(timeOf(x.at)):''}${x.feel?' · felt '+h(x.feel.toLowerCase()):''}${x.own?' · own time':''}${x.minutes?` · ${h(x.minutes)} of ${h(x.target||'?')} min`:''}${(x.worked||[]).length?' · '+h(x.worked.join(', ')):''}</p>
+          ${x.short?`<p class="note" style="margin:6px 0 0;color:var(--danger)">Stopped early: ${h(x.reason||'no reason given')}. Started ${h(timeOf(x.startedAt||x.at))}, finished ${h(timeOf(x.at))}.</p>`:''}
           ${x.note?`<p class="quote" style="margin:8px 0">“${h(x.note)}”${x.noteVia==='voice'?' <span class="note" style="margin:0">(spoken)</span>':''}</p>
           <div class="row"><button class="btn sm ${x.check==='ok'?'':'quiet'}" data-chk="ok" data-i="${x.i}">Sounds right${x.check==='ok'?' ✓':''}</button><button class="btn sm quiet" data-chk="query" data-i="${x.i}">Ask them</button><button class="btn sm ${x.check==='no'?'':'quiet'}" data-chk="no" data-i="${x.i}"${x.check==='no'?' style="background:var(--danger);color:#fff"':''}>Doesn't add up</button></div>
           ${x.check==='no'?'<div class="note">Token taken back; the day is greyed on their journey. Tap Sounds right to restore it.':x.check==='query'?'<div class="note">Asked. Your question is on their Today screen until they tap Done.':x.check==='ok'?'<div class="note">Confirmed.':'<div class="note">Confirm it, ask a question, or take the token back if it reads like a tick without a practice.'}</div>`

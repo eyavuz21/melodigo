@@ -1,8 +1,8 @@
-<p align="center"><img src="logo.svg" alt="Stuckato. One bit at a time." width="420"></p>
+<p align="center"><img src="logo.svg" alt="Stuckato. Short bursts. Real progress." width="420"></p>
 
 # Stuckato
 
-**One bit at a time.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Stuckato gets you to practise every day.
+**Short bursts. Real progress.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Stuckato gets you to practise every day.
 
 **Live:** https://practicigo.app
 
@@ -117,7 +117,7 @@ Open `index.html` in a browser and choose "Try it on this device". Accounts and 
 
 ## The name
 
-*Stuckato* (from 17 September 2026; Stuckato, Melodigo, Sostenuto and Rosin before that): *stuck* and *staccato*. Practice in short, detached bursts, one bit at a time, so nobody stays stuck between lessons. Database objects keep the `practicigo_` prefix from the previous name; renaming them would need another migration and gains nothing.
+*Stuckato* (from 17 September 2026; Stuckato, Melodigo, Sostenuto and Rosin before that): *stuck* and *staccato*. Practice in short, detached bursts, short bursts, real progress, so nobody stays stuck between lessons. Database objects keep the `practicigo_` prefix from the previous name; renaming them would need another migration and gains nothing.
 
 ## Founders
 
