@@ -64,6 +64,7 @@ header.top{display:flex; align-items:center; justify-content:space-between; gap:
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .jmap .wash{opacity:.18} } :root[data-theme="dark"] .jmap .wash{opacity:.18}
 #fermata{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:60;text-align:center;padding:24px;cursor:pointer}
 #fermata.on{display:flex}
+html.clean #demoBar,html.clean #startbar{display:none!important}
 #modal{position:fixed;inset:0;background:rgba(17,17,17,.55);display:none;align-items:flex-end;justify-content:center;z-index:70;padding:16px}
 #modal.on{display:flex}
 #modal .sheet{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;width:100%;max-width:520px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
@@ -256,6 +257,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   'use strict';
   const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
   const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(new URLSearchParams(location.search).get('clean')==='1') document.documentElement.classList.add('clean'); // screenshots: no demo bar, no start bar
   const uid=()=>Math.random().toString(36).slice(2,10);
   const today=()=>new Date().toISOString().slice(0,10);
   const addDays=(d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
@@ -955,7 +957,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     let saved=null; try{ saved=JSON.parse(localStorage.getItem('stuckato.demo.v1')||'null'); }catch(e){} students=saved||demoSeed(); current=students[0];
     renderAuth(); renderDemoBar(); setDemoRole('pupil');
   }
-  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=new URLSearchParams(location.search).get('clean')==='1'; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Parent's view</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('stuckato.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
+  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=false; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Parent's view</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('stuckato.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
   function setDemoRole(r){ demoRole=r; renderDemoBar(); if(r==='teacher'){ setTabs('teacher'); renderTeacher(); } else if(r==='share'){ current=students[0]; setTabs('student'); renderShare(); } else { current=students[0]; setTabs('student'); renderToday(); } }
 
   // ------------------------------------------------------------ the morning message: push subscription + test send
