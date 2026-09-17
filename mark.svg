@@ -1,3 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Practicigo">
-  <g transform="translate(0 0) scale(1.0)" fill="#111111"><ellipse cx="130" cy="82" rx="46" ry="31" transform="rotate(-22 130 82)"/><path d="M86 96 L86 211 a13 13 0 0 0 26 0 L112 92 Z"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Stuckato">
+  <g transform="translate(0 0) scale(1.0)"><g transform="translate(19 58) scale(0.85)"><path d="M172 86 C172 60 150 48 128 48 C100 48 82 62 82 86 C82 132 176 108 176 158 C176 186 152 204 126 204 C100 204 80 190 80 166" stroke="#111111" stroke-width="30" stroke-linecap="round" fill="none"/></g><circle cx="128" cy="34" r="13" fill="#111111"/></g>
 </svg>

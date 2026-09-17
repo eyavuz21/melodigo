@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Practicigo</title>
-<meta name="description" content="One note closer. Couch to 5K for practising an instrument, in a choir or in an orchestra. Your teacher sets the week; Practicigo gets you to practise every day.">
-<link rel="icon" type="image/svg+xml" href="icon-tile.svg?v=4"><link rel="apple-touch-icon" href="icon-192.png?v=4"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111111">
+<title>Stuckato</title>
+<meta name="description" content="One bit at a time. Couch to 5K for practising an instrument, in a choir or in an orchestra. Your teacher sets the week; Stuckato gets you to practise every day.">
+<link rel="icon" type="image/svg+xml" href="icon-tile.svg?v=5"><link rel="apple-touch-icon" href="icon-192.png?v=5"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111111">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 <style>
@@ -154,7 +154,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 <div class="wrap">
   <div id="demoBar" hidden></div>
   <header class="top">
-    <div class="brand"><h1><img src="wordmark.svg?v=4" alt="Practicigo" style="height:40px;display:block"></h1><small>One note closer.</small></div>
+    <div class="brand"><h1><img src="wordmark.svg?v=5" alt="Stuckato" style="height:40px;display:block"></h1><small>One bit at a time.</small></div>
     <div class="auth" id="auth"></div>
   </header>
 
@@ -246,7 +246,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2000); }
 
   // ------------------------------------------------------------ store: local or cloud
-  const LKEY='practicigo.local.v1'; const LKEY_OLDS=['melodigo.local.v1'];
+  const LKEY='stuckato.local.v1'; const LKEY_OLDS=['practicigo.local.v1','melodigo.local.v1'];
   let mode='none'; // 'local' | 'cloud' | 'demo'
   let sb=null, me=null, cfg=null; // me: {role, name, studio, code, studio_id, voice_ready, voice_id}
   async function authHeaders(){ if(!sb) return {}; const {data:{session}}=await sb.auth.getSession(); return session?{authorization:'Bearer '+session.access_token}:{}; }
@@ -262,13 +262,13 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 
   async function saveStudent(st){
     if(mode==='local'){ const o=loadLocal()||{}; o.doc=st.data; saveLocal(o); return; }
-    if(mode==='demo'){ try{ localStorage.setItem('practicigo.demo.v1', JSON.stringify(students)); }catch(e){} return; }
+    if(mode==='demo'){ try{ localStorage.setItem('stuckato.demo.v1', JSON.stringify(students)); }catch(e){} return; }
     const {error}=await sb.rpc('practicigo_save_student',{target:st.user_id, doc:st.data}); if(error){ console.warn(error); throw error; }
   }
   async function saveCurrent(){
     if(!current) return;
     if(mode==='local'){ const o=loadLocal()||{}; o.doc=current.data; saveLocal(o); return; }
-    if(mode==='demo'){ try{ localStorage.setItem('practicigo.demo.v1', JSON.stringify(students)); }catch(e){} return; }
+    if(mode==='demo'){ try{ localStorage.setItem('stuckato.demo.v1', JSON.stringify(students)); }catch(e){} return; }
     clearTimeout(pushTimer); pushTimer=setTimeout(async()=>{ const {error}=await sb.rpc('practicigo_save_student',{target:current.user_id, doc:current.data}); if(error){ console.warn(error); toast('Could not save. Check your connection.'); } }, 500);
   }
   async function refresh(){
@@ -564,8 +564,8 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <div class="row" style="justify-content:center"><button class="btn" id="shareBtn">Share the card</button><button class="btn quiet" id="dlBtn">Save the image</button></div>
       <p class="note" style="text-align:center">${w?'':'There is no week to show yet, so the card is a preview.'}</p>`;
     drawCard($('#cardc')); $('#backS').onclick=()=>renderTrail(true);
-    $('#shareBtn').onclick=async()=>{ const c=$('#cardc'); c.toBlob(async blob=>{ const file=new File([blob],'practicigo-week.png',{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:'My practice week', text:'My week on Practicigo'}); }catch(e){} } else { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='practicigo-week.png'; a.click(); toast('Saved. Share it from your photos.'); } },'image/png'); };
-    $('#dlBtn').onclick=()=>{ const c=$('#cardc'); c.toBlob(blob=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='practicigo-week.png'; a.click(); },'image/png'); };
+    $('#shareBtn').onclick=async()=>{ const c=$('#cardc'); c.toBlob(async blob=>{ const file=new File([blob],'stuckato-week.png',{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:'My practice week', text:'My week on Stuckato'}); }catch(e){} } else { const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='stuckato-week.png'; a.click(); toast('Saved. Share it from your photos.'); } },'image/png'); };
+    $('#dlBtn').onclick=()=>{ const c=$('#cardc'); c.toBlob(blob=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='stuckato-week.png'; a.click(); },'image/png'); };
     if(showIt!==false) show('share');
   }
   function drawCard(c){
@@ -584,7 +584,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     ctx.strokeStyle='#E9E9E9'; ctx.lineWidth=2; for(let y=40;y<H;y+=42){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
     // box 1: the dates
     const from=w?fmt(w.lessonDate||w.createdAt):fmt(today()); const to=w&&w.nextLesson?fmt(w.nextLesson):null;
-    box(40,120); ctx.fillStyle='#111111'; ctx.font=F(800,34); ctx.fillText('Practicigo.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
+    box(40,120); ctx.fillStyle='#111111'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
     // box 2: the pupil's week
     let y=190; box(y,270); label((p.name||'My')+"'s week",y+42);
     ctx.fillStyle='#111111'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
@@ -629,7 +629,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
         <p>On the mornings a session is due, ${h(doc().teacherName||'your teacher')} sends one short note: what you did last time, what is on today, and how long. Never twice in a day, never once the week is done.</p>
         <div class="row" id="remRow"><label class="switch" style="font-size:14px;color:var(--ink)"><input type="radio" name="rem" value="push" ${(p.reminder||'push')==='push'?'checked':''}> Notification on this phone</label><label class="switch" style="font-size:14px;color:var(--ink)"><input type="radio" name="rem" value="email" ${p.reminder==='email'?'checked':''}> Email${doc().contactEmail?' ('+h(doc().contactEmail)+')':''}</label><label class="switch" style="font-size:14px;color:var(--ink)"><input type="radio" name="rem" value="off" ${p.reminder==='off'?'checked':''}> Off</label></div>
         <div class="row" style="margin-top:10px"><button class="btn sm" id="pushOn">${doc().push?'Notifications are on for this phone':'Turn on notifications'}</button><button class="btn sm quiet" id="remTest">Send me today\'s message now</button><span class="status" id="remStatus" style="margin:0"></span></div>
-        <div class="note">${mode==='cloud'?'On an iPhone, add Practicigo to your Home Screen first (Share, then "Add to Home Screen"), then turn notifications on from there.':'Notifications need the live site with an account.'}</div></div>`;
+        <div class="note">${mode==='cloud'?'On an iPhone, add Stuckato to your Home Screen first (Share, then "Add to Home Screen"), then turn notifications on from there.':'Notifications need the live site with an account.'}</div></div>`;
     $('#backG').onclick=()=>renderTrail(true);
     $('#gSave').onclick=()=>{ p.goalLabel=$('#gLabel').value.trim(); p.goalDate=$('#gDate').value; p.part=$('#gPart').value.trim(); saveCurrent(); toast('Saved.'); renderTrail(true); };
     $$('#remRow input').forEach(r=>r.onchange=()=>{ p.reminder=r.value; saveCurrent(); toast(r.value==='off'?'No morning messages.':'Saved.'); });
@@ -663,11 +663,11 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const v=$('#v-voice'); const has=!!me?.voice_ready;
     v.innerHTML=`<button class="btn sm quiet" id="voiceBack">← Pupils</button>
       <div class="eyebrow" style="margin-top:10px">Your voice</div><h2 class="big">${has?'Recorded.':'Pupils hear the week in your voice.'}</h2>
-      <p>${has?`Your voice is set${me.voice_name?' ('+h(me.voice_name)+')':''}. New weeks you publish are spoken in it. You can re-record or remove it at any time; removing it deletes the clone.`:'Read the passage below aloud, about thirty seconds, in the voice you use in a lesson. Practicigo makes a clone of it and every caption you publish is spoken by it. Only text you have read and published is ever spoken; nothing is generated that you have not approved.'}</p>
+      <p>${has?`Your voice is set${me.voice_name?' ('+h(me.voice_name)+')':''}. New weeks you publish are spoken in it. You can re-record or remove it at any time; removing it deletes the clone.`:'Read the passage below aloud, about thirty seconds, in the voice you use in a lesson. Stuckato makes a clone of it and every caption you publish is spoken by it. Only text you have read and published is ever spoken; nothing is generated that you have not approved.'}</p>
       ${cfg?.voice?'':'<div class="box c"><b>Voice is not configured on this deployment yet.</b> The captions will use the browser\'s built-in voice until it is.</div>'}
       <div class="script" id="voiceScript">${h(VOICE_SCRIPT)}</div>
       <div class="card" style="margin-top:12px">
-        <label class="switch" style="font-size:14.5px;color:var(--ink)"><input type="checkbox" id="consent"> I'm recording my own voice and I agree to Practicigo cloning it to speak captions I publish. I can delete it whenever I like.</label>
+        <label class="switch" style="font-size:14.5px;color:var(--ink)"><input type="checkbox" id="consent"> I'm recording my own voice and I agree to Stuckato cloning it to speak captions I publish. I can delete it whenever I like.</label>
         <div class="row" style="margin-top:12px"><button class="btn" id="recStart" ${cfg?.voice?'':'disabled'}>Record</button><button class="btn quiet" id="recStop" disabled>Stop</button><span class="rec" id="recInd" hidden><span class="blink"></span><span id="recTime">0:00</span></span></div>
         <audio id="recPlay" controls hidden style="width:100%;margin-top:10px"></audio>
         <div class="row" style="margin-top:10px"><button class="btn" id="voiceUse" disabled>Use this voice</button>${has?'<button class="btn danger" id="voiceDel">Remove my voice</button>':''}</div>
@@ -912,10 +912,10 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   let demoRole='pupil';
   function enterDemo(){
     mode='demo'; me={role:'teacher', name:'Melisande', studio:"Melisande's pupils", code:'DEMO01', studio_id:'demo', voice_ready:false};
-    let saved=null; try{ saved=JSON.parse(localStorage.getItem('practicigo.demo.v1')||'null'); }catch(e){} students=saved||demoSeed(); current=students[0];
+    let saved=null; try{ saved=JSON.parse(localStorage.getItem('stuckato.demo.v1')||'null'); }catch(e){} students=saved||demoSeed(); current=students[0];
     renderAuth(); renderDemoBar(); setDemoRole('pupil');
   }
-  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=false; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Parent's view</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('practicigo.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
+  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=false; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Parent's view</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('stuckato.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
   function setDemoRole(r){ demoRole=r; renderDemoBar(); if(r==='teacher'){ setTabs('teacher'); renderTeacher(); } else if(r==='share'){ current=students[0]; setTabs('student'); renderShare(); } else { current=students[0]; setTabs('student'); renderToday(); } }
 
   // ------------------------------------------------------------ the morning message: push subscription + test send
@@ -923,7 +923,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   async function enablePush(){
     const st=$('#remStatus');
     if(mode!=='cloud'){ st.textContent='Sign in on the live site first.'; return; }
-    if(!('serviceWorker' in navigator)||!('PushManager' in window)){ st.textContent='This browser cannot show notifications. On an iPhone, add Practicigo to the Home Screen first.'; return; }
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)){ st.textContent='This browser cannot show notifications. On an iPhone, add Stuckato to the Home Screen first.'; return; }
     if(!cfg?.vapidPublicKey){ st.textContent='Notifications are not configured on this deployment yet.'; return; }
     try{
       const reg=await navigator.serviceWorker.register('/sw.js'); await navigator.serviceWorker.ready;

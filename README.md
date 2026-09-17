@@ -1,8 +1,8 @@
-<p align="center"><img src="logo.svg" alt="Practicigo. One note closer." width="420"></p>
+<p align="center"><img src="logo.svg" alt="Stuckato. One bit at a time." width="420"></p>
 
-# Practicigo
+# Stuckato
 
-**One note closer.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Practicigo gets you to practise every day.
+**One bit at a time.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Stuckato gets you to practise every day.
 
 **Live:** https://practicigo.app
 
@@ -10,7 +10,7 @@
 
 Every practice app is one of two things: it listens to you play and scores the notes (Yousician, Simply Piano, Trala), or it's a diary where you log your minutes (Tonara, Modacity). Both leave you alone on the part that matters, which is turning up three times a week when nobody is making you. Couch to 5K never measured anyone's running; it had a calm voice, a structure, and a reason to go out on Thursday. Nobody had done that for practising an instrument.
 
-Practicigo has two sides. The **teacher** writes a thirty-second note after each lesson (what we worked on, what to prepare, one line for the week) and sets how many minutes a day; Practicigo turns it into that pupil's week: one short guided session for every day, with step-by-step captions in the teacher's voice, a work list, and a checklist for the next lesson. The **pupil** runs each day's session (or practises on their own and just ticks), then ticks what they worked on from the work list, flags questions and breakthroughs while they're fresh, and keeps a streak that forgives a missed day. Before the next lesson the teacher sees what was worked on most, and the next week is planned around it. A **conductor** does the same for a whole choir or orchestra: one rehearsal note becomes a week for every member, each for their own part.
+Stuckato has two sides. The **teacher** writes a thirty-second note after each lesson (what we worked on, what to prepare, one line for the week) and sets how many minutes a day; Stuckato turns it into that pupil's week: one short guided session for every day, with step-by-step captions in the teacher's voice, a work list, and a checklist for the next lesson. The **pupil** runs each day's session (or practises on their own and just ticks), then ticks what they worked on from the work list, flags questions and breakthroughs while they're fresh, and keeps a streak that forgives a missed day. Before the next lesson the teacher sees what was worked on most, and the next week is planned around it. A **conductor** does the same for a whole choir or orchestra: one rehearsal note becomes a week for every member, each for their own part.
 
 ## What's in v0.7 (16 September 2026)
 
@@ -20,7 +20,7 @@ Practicigo has two sides. The **teacher** writes a thirty-second note after each
 - **Tell me when they finish.** A per-pupil switch on the pupil page; when on, the teacher gets an email the moment the sentence is saved (`api/notify.js`, Resend; silent if email is not configured).
 - **The play-through.** The day before the lesson (or once every day is done) Today asks for one recording of the piece, all the way through, up to five minutes. It uploads to the audio bucket under `<studio>/recordings/<pupil>/<week>`; the teacher gets a player, *Heard it*, and a one-line reply that goes to the pupil now and is pre-filled as next week's "What you did well". The week's two bonus tokens wait for it. The bucket is public-read, so anyone with the exact URL can play a recording: fine for the pilot, move recordings to a private bucket before it grows.
 - **The light on the goal.** A dot and a word next to the goal, on Today, the Goal tab and the teacher's list: green *On track* (80%+ of the goal-weeks so far had practice in them), amber *Slipping* (50 to 79%), red *Talk about the date* (under 50%), dropped one level when it is day five or later with fewer than two days done. The one place colour is used for something other than a flag.
-- New name: Practicigo, with the i before *go* as a crotchet.
+- Name: Stuckato (stuck + staccato). Mark: the S with a staccato dot above it.
 - Demo views: `?demo=done`, `?demo=fermata`, `?demo=pupilpage`, `?demo=pupil2` (the pupil whose play-through is due).
 
 ## What's in v0.3 (14 September 2026)
@@ -54,7 +54,7 @@ Practicigo has two sides. The **teacher** writes a thirty-second note after each
 - **A named reward.** The teacher writes what six tokens earns ("a hot chocolate after Thursday's lesson"); the pupil sees it on their Journey, and the teacher marks it given
 - **The teacher sets the practice time.** Level is a dropdown (beginner, grades 1 to 3, 4 to 6, 7 to 8, returning adult, advanced) and each level suggests minutes a day (20, 25, 40, 60, 25, 75); the teacher can override it per pupil, up to 120. The sessions are written to that length and the pupil's Today screen says who set it
 - **The morning message.** On any morning a session is due, the pupil gets one note from the teacher: what they did last time and how they said it felt, what is on today and how long. Never twice a day, nothing once the week is done. Delivered as a phone notification (web push, the app added to the Home Screen) or by email; the pupil chooses under Goal and can send themselves today's message to check it. A daily Vercel cron (`/api/reminders`, 06:30 UTC) does the sending and logs every send against the pupil, so completion within the day can be measured
-- Installable: manifest, icons and a service worker, so Practicigo sits on the Home Screen like an app
+- Installable: manifest, icons and a service worker, so Stuckato sits on the Home Screen like an app
 
 ## What was in v0.2
 
@@ -63,7 +63,7 @@ Practicigo has two sides. The **teacher** writes a thirty-second note after each
 - **Pupil:** Today (next session, streak, week dots), a session runner with a progress ring, captions, optional read-aloud (browser speech), pause/skip/stop, and "how did it feel"; Journey (path from lesson to lesson, checklist, flags, tokens); Goal (date, weeks to go, road phases)
 - Tokens: one per session, two more for a full week; six is a small reward the teacher marks as given
 - **See how it works:** a demo with three pupils and a week already set, switchable between the pupil's side, the teacher's side and the parent's view, no sign-in
-- **The teacher's voice:** on first use the teacher reads a thirty-second passage with a consent box ticked; Practicigo clones the voice (ElevenLabs) and every caption in every published week is spoken in it. Only text the teacher has previewed and published is ever spoken; the teacher can re-record or delete the clone at any time, and deleting it removes it from ElevenLabs too. Pupils are told it's generated
+- **The teacher's voice:** on first use the teacher reads a thirty-second passage with a consent box ticked; Stuckato clones the voice (ElevenLabs) and every caption in every published week is spoken in it. Only text the teacher has previewed and published is ever spoken; the teacher can re-record or delete the clone at any time, and deleting it removes it from ElevenLabs too. Pupils are told it's generated
 - **Dictated notes:** every note field has a Dictate button. Browser speech recognition where it exists (Chrome, Safari), server transcription as the fallback
 - **Share card:** the pupil turns their week into an image (sessions, minutes, streak, checklist, the teacher's line) and shares it with a parent or anyone they choose, from their own phone. Nothing is shared unless the pupil sends it; nothing else about them is in it
 - Works on this device with no account, so anyone can try the whole loop alone (you play both sides)
@@ -117,7 +117,7 @@ Open `index.html` in a browser and choose "Try it on this device". Accounts and 
 
 ## The name
 
-*Practicigo* (from 16 September 2026; Melodigo before that, Sostenuto and Rosin before that): *practice* and *go*. Spelt with a c, the way people type it; practisigo redirects. The mark is the i before *go* drawn as a crotchet: a note, no flag, nobody racing anybody. Black and white, like a piano, like the page. The line under it: *One note closer.* The database objects are `practicigo_*`; only the audio bucket id, `melodigo-audio`, keeps the old word, because every stored audio URL embeds it.
+*Stuckato* (from 17 September 2026; Stuckato, Melodigo, Sostenuto and Rosin before that): *stuck* and *staccato*. Practice in short, detached bursts, one bit at a time, so nobody stays stuck between lessons. Database objects keep the `practicigo_` prefix from the previous name; renaming them would need another migration and gains nothing.
 
 ## Founders
 

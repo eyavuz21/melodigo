@@ -1,9 +1,9 @@
 {
-  "name": "practicigo",
+  "name": "stuckato",
   "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "Practicigo: one note closer. Couch to 5K for practising an instrument, alone or in a choir or orchestra. A teacher or conductor sets each week in thirty seconds; every pupil gets guided sessions in the teacher's voice, a journey to the next lesson, and a reason to turn up on Thursday.",
+  "description": "Stuckato: one bit at a time. Couch to 5K for practising an instrument, alone or in a choir or orchestra. A teacher or conductor sets each week in thirty seconds; every pupil gets guided sessions in the teacher's voice, a journey to the next lesson, and a reason to turn up on Thursday.",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
     "web-push": "^3.6.7"

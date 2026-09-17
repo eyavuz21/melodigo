@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   const when = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
   const text = `${name} finished ${day && of ? `day ${day} of ${of}` : "a session"}${title ? ` (${title})` : ""} at ${when}${minutes ? `, ${minutes} minutes` : ", in their own time"}.\n\nThey wrote: "${note}"\n\nConfirm it, ask them a question, or take the token back: ${process.env.APP_URL || "https://practicigo.app"}\n\nYou get this because you ticked "Tell me when they finish" on ${name}'s page.`;
   const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: `Bearer ${resend}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: process.env.REMINDER_FROM || "Practicigo <onboarding@resend.dev>", to: [teacher.email], subject: `${name} finished today's practice`, text }) });
+    body: JSON.stringify({ from: process.env.REMINDER_FROM || "Stuckato <onboarding@resend.dev>", to: [teacher.email], subject: `${name} finished today's practice`, text }) });
   if (!r.ok) return res.status(502).json({ sent: false, reason: `resend ${r.status}` });
   return res.status(200).json({ sent: true });
 }
