@@ -174,7 +174,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <p>A short session every day, in your teacher's words. Tick what you worked on. Your teacher plans the next lesson from it.</p></div>
     <div class="row" style="margin-top:8px"><button class="btn block" id="landSignin">Sign in with email</button></div>
     <div class="row" style="margin-top:10px"><button class="btn quiet" id="landDemo">See how it works</button><button class="btn quiet" id="landLocal">Try it on this device</button></div>
-    <p class="note">Pupils join with their teacher's code. Teachers and conductors create a studio. A parent holds a young child's account.</p>
+    <p class="note">Your teacher sets up the account and gives you a code. Join with the code and the week is waiting. A parent holds a young child's account.</p>
     <p class="note" id="landNote"></p>
   </section>
 
@@ -621,11 +621,13 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     let hh=42; if(fb) hh+=36+lines(fb,W-140,F(700,28)).length*38+40; if(list.length){ hh+=36; list.forEach(t=>hh+=lines(t,W-180,F(600,24)).length*30+8); } if(!fb&&!list.length) hh+=40; hh+=18;
     const goal=p.goalDate&&doc().weeks.length?{label:p.goalLabel||'Goal', date:p.goalDate, start:(doc().weeks[0].lessonDate||doc().weeks[0].createdAt)}:null;
     const H=top+hh+40+(goal?200:0); if(c.height!==H) c.height=H;
-    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='#E9E9E9'; ctx.lineWidth=2; for(let y=40;y<H;y+=42){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    const gl=goalLight(); const WASH={g:['#E4F1E9','#CFE6D8','#2E8B57'],a:['#FBF0DC','#F5E2BE','#D98A00'],r:['#F8E3E6','#F0CCD2','#B00020']}[gl?gl.k:'']||['#FFFFFF','#E9E9E9','#666666'];
+    ctx.fillStyle=WASH[0]; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle=WASH[1]; ctx.lineWidth=2; for(let y=40;y<H;y+=42){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
     // box 1: the dates
     const from=w?fmt(w.lessonDate||w.createdAt):fmt(today()); const to=w&&w.nextLesson?fmt(w.nextLesson):null;
     box(40,120); ctx.fillStyle='#111111'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
+    if(gl){ ctx.font=F(800,22); const tw=ctx.measureText(gl.word).width+36; ctx.fillStyle=WASH[2]; ctx.beginPath(); ctx.roundRect(W-70-tw,68,tw,40,20); ctx.fill(); ctx.fillStyle='#FFFFFF'; ctx.fillText(gl.word,W-70-tw+18,96); }
     // box 2: the pupil's week
     let y=190; box(y,270); label((p.name||'My')+"'s week",y+42);
     ctx.fillStyle='#111111'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
