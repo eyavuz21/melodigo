@@ -4,7 +4,7 @@
 
 **Short bursts. Real progress.** Couch to 5K for practising an instrument, on your own with a teacher or as part of a choir or orchestra. Your teacher sets the week in thirty seconds; Stuckato gets you to practise every day.
 
-**Live:** https://practicigo.app
+**Live:** https://stuckato.app
 
 ## The idea
 
