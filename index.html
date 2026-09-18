@@ -727,7 +727,8 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const wrap=(t,x,y,mw,lh,font,col)=>{ const ls=lines(t,mw,font); ctx.font=font; ctx.fillStyle=col; ls.forEach((l,i)=>ctx.fillText(l,x,y+i*lh)); return y+ls.length*lh; };
     const box=(y,hh)=>{ ctx.fillStyle='#000000'; ctx.strokeStyle='#3A3327'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(40,y,W-80,hh,26); ctx.fill(); ctx.stroke(); };
     const label=(t,y)=>{ ctx.fillStyle='#B3A48C'; ctx.font=F(800,18); ctx.fillText(t.toUpperCase(),70,y); };
-    const top=490; const fb=w&&(w.line||w.encouragement); const list=w&&w.checklist?w.checklist.slice(0,4):[];
+    const tks=w?takesOff(w).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')):[]; const pgLine=tks.length?(()=>{ const L=tks[tks.length-1], F=tks[0]; const tot=(w.takes||[]).find(t=>t.i===L.i)?.diff?.total||''; const dn=at=>fmt((at||'').slice(0,10)).split(' ')[0]; return `The passage: ${tot-L.off} of ${tot} notes matched ${tn}'s on ${dn(L.at)}`+(tks.length>1?`, up from ${tot-F.off} on ${dn(F.at)}.`:'.'); })():'';
+    const top=490+(pgLine?40:0); const fb=w&&(w.line||w.encouragement); const list=w&&w.checklist?w.checklist.slice(0,4):[];
     let hh=42; if(fb) hh+=36+lines(fb,W-140,F(700,28)).length*38+40; if(list.length){ hh+=36; list.forEach(t=>hh+=lines(t,W-180,F(600,24)).length*30+8); } if(!fb&&!list.length) hh+=40; hh+=18;
     const goal=p.goalDate&&doc().weeks.length?{label:p.goalLabel||'Goal', date:p.goalDate, start:(doc().weeks[0].lessonDate||doc().weeks[0].createdAt)}:null;
     const H=top+hh+40+(goal?200:0); if(c.height!==H) c.height=H;
@@ -740,10 +741,11 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     box(40,120); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
     if(gl){ ctx.font=F(800,22); const tw=ctx.measureText(gl.word).width+36; ctx.fillStyle=WASH[2]; ctx.beginPath(); ctx.roundRect(W-70-tw,68,tw,40,20); ctx.fill(); ctx.fillStyle='#000000'; ctx.fillText(gl.word,W-70-tw+18,96); }
     // box 2: the pupil's week
-    let y=190; box(y,270); label((p.name||'My')+"'s week",y+42);
+    let y=190; box(y,270+(pgLine?40:0)); label((p.name||'My')+"'s week",y+42);
     ctx.fillStyle='#F5E4CA'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
     const stats=[[String(n)+'/'+tot,'days practised'],[String(mins),'minutes practised'],[String(tokensView().avail),'points earned']];
     stats.forEach((st,i)=>{ const x=70+i*236; ctx.fillStyle='#17130C'; ctx.beginPath(); ctx.roundRect(x,y+132,216,108,18); ctx.fill(); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,44); ctx.fillText(st[0],x+20,y+188); ctx.fillStyle='#B3A48C'; ctx.font=F(600,18); ctx.fillText(st[1],x+20,y+222); });
+    if(pgLine){ ctx.fillStyle='#B3A48C'; ctx.font=F(600,20); ctx.fillText(pgLine,70,y+284); }
     // box 3: feedback from the last lesson, and what is wanted for the next one
     box(top,hh); y=top+42;
     if(fb){ label('Feedback from the last lesson',y); y=wrap(fb,70,y+36,W-140,38,F(700,28),'#F5E4CA'); ctx.fillStyle='#B3A48C'; ctx.font=F(600,19); ctx.fillText(tn,70,y-4); y+=40; }
@@ -869,6 +871,9 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     ['baseline_attended_of_4','Lessons attended out of the last four before the pilot.'],
     ['baseline_prepared','Teacher\'s typical "prepared" rating before the pilot, 1 to 5.'],
     ['baseline_progress','Teacher\'s typical "progress" rating before the pilot, 1 to 5.'],
+    ['passage_takes','Takes of the week\'s passage the pupil sent (one per day at most). Blank if the teacher set no passage.'],
+    ['passage_first_off','Notes that differed from the teacher\'s passage on the first take of the week: wrong, missing and extra added together. Blank if no take.'],
+    ['passage_last_off','The same on the last take of the week. First minus last is the week\'s movement on the passage.'],
     ['exported_at','When the file was made.']];
   function weekRow(st, w, k, exportedAt){
     const d=st.data, p=d.profile||{}, b=d.baseline||{}; const done=(w.done||[]).filter(x=>x.at);
@@ -876,7 +881,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const doneMin=done.reduce((a,x)=>a+(x.minutes!=null?+x.minutes:(x.own?0:(planned[x.i]?planned[x.i].steps.reduce((m,y)=>m+(+y.minutes||0),0):0))),0);
     const days=new Set(done.map(x=>String(x.at).slice(0,10))).size; const short=done.filter(x=>x.short); const gl=goalLight(d);
     const o=w.outcome||{}, pu=w.pulse||{}; const r=(n,dn)=>dn?Math.round(n/dn*1000)/1000:'';
-    return [st.user_id, p.name||'', p.instrument||'', p.level||'', k+1, w.lessonDate||w.createdAt||'', w.nextLesson||'', planned.length, done.length, r(done.length,planned.length), planMin, doneMin, r(doneMin,planMin), days, short.length, short.map(x=>x.reason||'').join('|'), done.filter(x=>x.note).length, done.filter(x=>x.check==='ok').length, done.filter(x=>x.check==='no').length, w.recording?1:0, pu.ready||'', pu.want||'', o.attendance||'', o.prepared||'', o.progress||'', gl?gl.k:'', b.w1Days??'', b.w1Minutes??'', b.w2Days??'', b.w2Minutes??'', b.attendedOf4??'', b.prepared??'', b.progress??'', exportedAt];
+    return [st.user_id, p.name||'', p.instrument||'', p.level||'', k+1, w.lessonDate||w.createdAt||'', w.nextLesson||'', planned.length, done.length, r(done.length,planned.length), planMin, doneMin, r(doneMin,planMin), days, short.length, short.map(x=>x.reason||'').join('|'), done.filter(x=>x.note).length, done.filter(x=>x.check==='ok').length, done.filter(x=>x.check==='no').length, w.recording?1:0, pu.ready||'', pu.want||'', o.attendance||'', o.prepared||'', o.progress||'', gl?gl.k:'', b.w1Days??'', b.w1Minutes??'', b.w2Days??'', b.w2Minutes??'', b.attendedOf4??'', b.prepared??'', b.progress??'', ...(w.passage?[(w.takes||[]).length, (()=>{ const t=takesOff(w).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')); return [t.length?t[0].off:'', t.length?t[t.length-1].off:'']; })()].flat():['','','']), exportedAt];
   }
   function pilotCSV(){
     const now=new Date().toISOString(); const rows=[METRICS.map(m=>m[0])];
@@ -1125,6 +1130,11 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
         sessions:[day('Slowly','Melisande said: don\'t rush the scale. Everything slowly today.',WORK[0],WORK[1]),day('Nearer the bridge','Melisande said: bow nearer the bridge. That is the whole of today.',WORK[2],WORK[1]),day('From memory','Music away today. Say the note names as you play.',WORK[0],WORK[3]),day('The F sharp','Melisande said the F sharp was low in the lesson. Slowly, and listen for it yourself.',WORK[1],WORK[0]),day('Long notes','Melisande said: nearer the bridge on the long notes. Nothing new today.',WORK[2],WORK[3]),day('Once through','Play each thing once, properly, as you would for Melisande.',WORK[0],WORK[1]),day('Ready for Saturday','Short and tidy. Then rest.',WORK[1],WORK[2])],
         checklist:['D major scale from memory','First phrase of Twinkle in tune, with a high F sharp','Bow nearer the bridge on long notes'],work:WORK,
         done:[{i:0,at:addDays(today(),-2)+'T18:00:00Z',feel:'Easy',worked:[WORK[0],WORK[1]],note:'Open strings and the scale. My bow kept drifting to the fingerboard so I watched it in the mirror and it stayed nearer the bridge.',noteVia:'typed',earned:true,check:'ok'},{i:1,at:addDays(today(),-1)+'T18:10:00Z',feel:'Fine',worked:[WORK[2],WORK[1],WORK[3]],note:'Twinkle first phrase. The F sharp was flat so I played it against the open A ten times and it got closer.',noteVia:'voice',earned:true}],ticks:[0]}]};
+    // the week's passage: Twinkle's first phrase as Melisande played it (notes only, no audio in the demo), and two takes
+    const TW=[62,62,69,69,71,71,69,67,67,66,66,64,64,62]; const mkNotes=ms=>ms.map((m,k)=>({m,t:k*0.5,d:0.45,cents:0}));
+    const cw=emre.weeks[0]; cw.passage={id:uid(),at:addDays(today(),-3)+'T17:30:00Z',by:'Melisande',seconds:7,label:'Twinkle variation A, first phrase',notes:mkNotes(TW),v:1};
+    const take1=[62,62,69,69,71,71,69,67,67,65,65,64,62], take2=[62,62,69,69,71,71,69,67,67,65,66,64,64,62]; // day 1: both F sharps low and an E dropped; day 2: one F sharp still low
+    cw.takes=[{i:0,at:addDays(today(),-2)+'T18:20:00Z',seconds:8,notes:mkNotes(take1),diff:Passage.compare(cw.passage.notes,mkNotes(take1)),heard:true},{i:1,at:addDays(today(),-1)+'T18:30:00Z',seconds:7,notes:mkNotes(take2),diff:Passage.compare(cw.passage.notes,mkNotes(take2))}];
     // three earlier weeks, so the month view has something to show
     const past=(k,doneIdx,line)=>({id:uid(),createdAt:addDays(today(),-3-7*k),lessonDate:addDays(today(),-3-7*k),nextLesson:addDays(today(),-3-7*(k-1)),workedOn:'Open strings, D major scale, first line of Twinkle.',line,encouragement:'',sessions:[day('Open strings','Long bows.',WORK[3],WORK[0]),day('D major','Slowly.',WORK[0],WORK[3]),day('Twinkle','First line.',WORK[1],WORK[0]),day('Contact point','Nearer the bridge.',WORK[2],WORK[1]),day('From memory','Music away.',WORK[0],WORK[1]),day('Once through','As for me.',WORK[1],WORK[2]),day('Rest and tidy','Short.',WORK[3],WORK[1])],checklist:[],work:WORK,done:doneIdx.map(i=>({i,at:addDays(today(),-3-7*k+i)+'T18:00:00Z',feel:'Fine',worked:[WORK[i%4]],note:'Worked on '+WORK[i%4].toLowerCase()+'. Slower than last time and it held together.',noteVia:'typed',earned:true,check:'ok'})),ticks:[],recording:{at:addDays(today(),-3-7*(k-1)-1)+'T19:00:00Z',seconds:95,heard:true},bonus:doneIdx.length===7});
     emre.weeks.unshift(past(3,[0,2,3,5],'Good start.'),past(2,[0,1,2,3,4,5,6],'Every day. Well done.'),past(1,[0,1,2,3,4,6],'Much better in tune.'));
