@@ -40,6 +40,7 @@ header.top{display:flex; align-items:center; justify-content:space-between; gap:
 .btn[disabled]{opacity:.5; cursor:not-allowed}
 .eyebrow{font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
 .chips{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 12px} .chip{display:inline-flex; align-items:center; gap:6px; background:var(--card); border:1.5px solid var(--line); border-radius:999px; padding:9px 15px; font-size:17px; font-weight:700; color:var(--ink)} .chip.amber{background:var(--amber); color:var(--amber-ink); border-color:var(--amber)} .chip b{color:var(--muted); font-weight:600}
+button.chip{cursor:pointer;font-family:inherit} .chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)} .chip.on b{color:var(--paper)}
 .muted{color:var(--muted)}
 .label{font-size:13px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 6px}
 .big{font-size:38px; line-height:1.06; margin:2px 0 14px; color:var(--varnish)}
@@ -220,6 +221,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <div class="feel" id="feel"><button data-f="Easy">Easy</button><button data-f="Fine">Fine</button><button data-f="Hard">Hard</button></div>
       <div id="tailor" hidden style="margin-top:10px"></div></div>
     <button class="btn block" id="doneBack" disabled>Write a sentence to finish</button>
+    <button class="btn block quiet" id="donePassage" hidden style="margin-top:8px">Then record the week's passage</button>
     <p class="note" style="text-align:center">Sleep on it. That's when it sticks.</p>
   </section>
   <!-- STUDENT: JOURNEY -->
@@ -454,7 +456,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <div class="box says"><div class="label">Lesson · ${h(fmt(w.lessonDate||w.createdAt))} · from ${h(tn)}</div><p style="margin:0"><b>What you did well:</b> ${h(w.line||w.encouragement||'Turn up every day and the lesson takes care of itself.')}</p>${(w.checklist||[]).length?`<p style="margin:8px 0 0"><b>What to work on:</b> ${h(w.checklist.join(' · '))}.</p>`:''}
         ${openExtras().map(x=>`<div class="row" style="margin:4px 0 0;justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><p style="margin:0"><b>News from ${h(tn)}:</b> ${h(x.text)} (${h(fmt(x.at.slice(0,10)))})</p><button class="btn sm quiet" data-xdone="${x.id}" style="flex:none">Done</button></div>`).join('')}</div>
       <div class="card"><div class="label">${w.sessions.length} days, then ${h(tn)}</div>
-        ${pendCard}${s?journeyMap(w, flags, 'top'):''}${todayCard}${pulseCard}${s?'':recCard}${s?journeyMap(w, flags, 'bottom'):journeyMap(w, flags, 'all')}${s?recCard:''}
+        ${pendCard}${s?journeyMap(w, flags, 'top'):''}${todayCard}${passagePupilHTML(w, tn)}${pulseCard}${s?'':recCard}${s?journeyMap(w, flags, 'bottom'):journeyMap(w, flags, 'all')}${s?recCard:''}
         <div class="label" style="margin-top:10px">At the lesson: show ${h(tn)}</div>
         <ul class="check" id="prep">${(w.checklist||[]).map((c,k)=>`<li class="${(w.ticks||[]).includes(k)?'on':''}" data-k="${k}"><i></i><span>${h(c)}</span></li>`).join('')||'<li><i></i><span style="color:var(--muted)">No checklist this week</span></li>'}</ul>
         ${extras().filter(x=>x.at>=w.createdAt).length?`<ul class="check">${extras().filter(x=>x.at>=w.createdAt).map(x=>`<li class="${x.done?'on':''}" data-x="${x.id}"><i></i><span>${h(x.text)}</span></li>`).join('')}</ul>`:''}
@@ -466,14 +468,14 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       ${doc().weeks.length>1?`<div class="card"><div class="label">The last ${Math.min(5,doc().weeks.length)} weeks</div>${staveMonth(doc().weeks)}</div>`:''}
       ${roadHTML(p)}
       <div class="box warn"><div class="label">At the lesson: ask ${h(tn)}</div>
-        <div id="flags">${flags.filter(f=>!f.resolved).map(f=>`<div class="flag"><span>${h(f.text)}</span><button class="btn sm quiet" data-unflag="${f.id}" aria-label="Remove">×</button></div>`).join('')||'<div class="note" style="margin:0">Nothing flagged. Type it the moment it happens: a squeak, a question, a breakthrough.</div>'}</div>
+        <div id="flags">${stillDiffersLine(w)?`<div class="flag"><span>${h(stillDiffersLine(w))}</span></div>`:''}${flags.filter(f=>!f.resolved).map(f=>`<div class="flag"><span>${h(f.text)}</span><button class="btn sm quiet" data-unflag="${f.id}" aria-label="Remove">×</button></div>`).join('')||(stillDiffersLine(w)?'':'<div class="note" style="margin:0">Nothing flagged. Type it the moment it happens: a squeak, a question, a breakthrough.</div>')}</div>
         <form id="flagForm" class="row" style="margin-top:8px"><input id="flagText" placeholder="e.g. G string squeaks on down bows" style="flex:1"><button class="btn sm" type="submit">Flag it</button></form>
         <div class="note">${h(tn)} sees these before the lesson starts.</div></div>
       <div class="grid2" style="margin-top:4px"><button class="btn quiet" id="goGoal">Set or change the goal</button><button class="btn" id="goShare">Share the card</button></div>`;
     const os=$('#ownStart'); if(os) os.onclick=()=>ready(()=>startOwn(i));
     wireScales(); const ps=$('#pulseSave'); if(ps) ps.onclick=()=>{ const r=scaleVal('puReady'), q=scaleVal('puWant'); if(!r||!q){ toast('Tap a number on both.'); return; } w.pulse={ready:r, want:q, at:new Date().toISOString()}; saveCurrent(); toast('Thanks. Good luck tomorrow.'); renderToday(); };
     const fp=$('#finishPend'); if(fp) fp.onclick=()=>{ si=pend.i; sess=w.sessions[pend.i]; showDone(); };
-    wireRecording(w, tn);
+    wireRecording(w, tn); wirePassagePupil(w, tn);
     const b=$('#start'); if(b) b.onclick=()=>ready(()=>startSession(i));
     $('#goGoal').onclick=()=>renderGoal(true); $('#goShare').onclick=()=>renderShare(true);
     $$('[data-xdone]').forEach(x=>x.onclick=()=>{ const e=extras().find(y=>y.id===x.dataset.xdone); if(e){ e.done=true; e.doneAt=new Date().toISOString(); } saveCurrent(); renderTrail(); toast('Done. Nice.'); });
@@ -540,7 +542,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const w=week(); const d=(w.done||[]).find(x=>x.i===si)||{};
     $('#doneTitle').textContent=`Day ${doneCount(w)} of ${w.sessions.length}.`+(streak()>0?` That's ${streak()} in a row.`:''); $('#doneSub').textContent=(d.minutes?`${d.minutes} of ${d.target||planMinutes(sess)} minutes${d.own?', on your own':''}. `:(d.own?'Practised on your own. ':`${sess.steps.reduce((a,x)=>a+(+x.minutes||0),0)} minutes. `))+(d.short?'Shorter than planned; your teacher will see why. ':'')+(d.note?'':'Write what changed and the token is yours.');
     $('#reflWho').textContent=doc().teacherName||'your teacher'; $('#refl').value=d.note||''; $('#refl').dataset.via=d.noteVia||''; updateReflBtn();
-    renderWorked(); $$('#feel button').forEach(b=>{ b.classList.toggle('on', b.dataset.f===d.feel); }); $('#tailor').hidden=true; show('done');
+    renderWorked(); $$('#feel button').forEach(b=>{ b.classList.toggle('on', b.dataset.f===d.feel); }); $('#tailor').hidden=true; $('#donePassage').hidden=!w.passage; show('done');
   }
   function updateReflBtn(){ const ok=$('#refl').value.trim().length>=20; const b=$('#doneBack'); b.disabled=!ok; b.textContent=ok?'Done for today':'Write a sentence to finish'; $('#reflHint').textContent=ok?'':'A sentence or two, or tap Dictate and say it.'; }
   $('#refl').oninput=()=>{ if(!$('#refl').dataset.via) $('#refl').dataset.via='typed'; updateReflBtn(); };
@@ -564,6 +566,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       t.innerHTML=`<div class="label">Which bit?</div><ul class="ticks" id="hardList">${items.map(it=>`<li class="${d?.hard===it?'on':''}" data-hb="${h(it)}"><i></i><span>${h(it)}</span></li>`).join('')}</ul><p class="note" id="hardNote" style="margin:6px 0 0">${d?.hard?'Noted for the next lesson. Hard days count double.':'Tap the one that was hard. It goes to '+h(doc().teacherName||'your teacher')+' for the next lesson.'}</p>`;
       $$('#hardList li').forEach(li=>li.onclick=()=>{ const it=li.dataset.hb; const f=doc().flags=doc().flags||[]; if(d.hard){ const old=f.find(x=>x.id===d.hardFlag); if(old) old.text='Hard: '+it; } else { const id=uid(); f.push({id, text:'Hard: '+it, at:new Date().toISOString(), resolved:false, by:'pupil'}); d.hardFlag=id; } d.hard=it; saveCurrent(); b.onclick(); }); }
     else t.innerHTML = b.dataset.f==='Easy'?'<b>Easy.</b> Good to know; your teacher will see it and can move you on.':'<b>Noted.</b> Steady is the point. Sleep does the rest.'; });
+  $('#donePassage').onclick=()=>{ const w=week(); const d=(w.done||[]).find(x=>x.i===si); if(d&&!d.note){ toast('Write the sentence first.'); return; } renderJourney(true); const c=$('#pgCard'); if(c) c.scrollIntoView({behavior:'smooth',block:'center'}); };
   $('#doneBack').onclick=()=>{ const w=week(); const d=(w.done||[]).find(x=>x.i===si); const txt=$('#refl').value.trim(); if(!d||txt.length<20){ updateReflBtn(); return; }
     const first=!d.note; d.note=txt; d.noteVia=$('#refl').dataset.via||'typed'; d.noteAt=new Date().toISOString();
     if(!d.earned){ const t=doc().tokens||(doc().tokens={earned:0,redeemed:0}); t.earned=(t.earned||0)+1; d.earned=true; }
@@ -667,6 +670,42 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const sorted=(w.takes||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
     $$('[data-pgheard]').forEach(b=>b.onclick=()=>{ const t=sorted[+b.dataset.pgheard]; if(!t) return; t.heard=true; t.heardAt=new Date().toISOString(); saveCurrent(); renderTStudent(); });
     $$('[data-pgask]').forEach(b=>b.onclick=()=>{ const t=sorted[+b.dataset.pgask]; if(!t) return; const q=prompt('Ask '+(p.name||'them')+' about the passage (day '+(t.i+1)+'):'); if(!q||!q.trim()) return; d.extras=d.extras||[]; d.extras.push({id:uid(), text:'About the passage (day '+(t.i+1)+'): '+q.trim(), at:new Date().toISOString(), done:false, by:me?.name||''}); t.ask=true; t.heard=true; saveCurrent(); renderTStudent(); toast('Sent.'); });
+  }
+  function passagePupilHTML(w, tn){ // the pupil's card: hear the teacher's bars, record the same bars, see where they differ
+    const pg=w.passage; if(!pg) return ''; const takes=w.takes||[]; const src=takeSrc(pg);
+    return `<div class="card" id="pgCard" style="border-color:var(--ink)"><div class="label" style="color:var(--ink)">The week's passage · from ${h(tn)}</div>
+      <p style="margin:0 0 8px"><b>${h(pg.label||'The bars that matter this week')}</b>. ${pg.notes.length} notes, ${pg.seconds||''} seconds, played by ${h(tn)}.</p>
+      <div class="row">${src?`<button class="btn sm quiet" id="ppPlay">Play</button><button class="btn sm quiet" id="ppSlow">Play slowly</button>`:''}<button class="btn sm" id="ppRec">Record mine</button></div>
+      <p class="note" id="ppStatus" style="margin:8px 0 0">${src?'':'The sound was recorded on another device, so only the notes are here. '}The same bars, once, up to thirty seconds. Then Stuckato shows you where yours differ from ${h(tn)}'s.</p>
+      ${src?`<audio id="pgAudio" src="${h(src)}" hidden></audio>`:''}<audio id="ppMine" hidden></audio>
+      <div id="ppResult"></div>
+      ${takes.length?`<div class="label" style="margin-top:10px">This week · notes that differed</div>${trendHTML(w)}`:''}
+      <div class="note" style="margin:8px 0 0">Stuckato hears roughly. ${h(tn)} decides.</div></div>`;
+  }
+  let ppBlob=null, ppDiff=null, ppNotes=null, ppStartedAt=0, ppCap=null;
+  function wirePassagePupil(w, tn){
+    const rb=$('#ppRec'); if(!rb) return; const st=$('#ppStatus'), ref=$('#pgAudio'), mine=$('#ppMine'), res=$('#ppResult');
+    const pp=$('#ppPlay'); if(pp) pp.onclick=()=>slowPlay(ref,false); const ps=$('#ppSlow'); if(ps) ps.onclick=()=>slowPlay(ref,true);
+    const showResult=()=>{ const c=ppDiff; const sp=c.spots;
+      res.innerHTML=`<p style="margin:10px 0 6px">Stuckato thinks <b>${c.matched} of ${c.total}</b> notes matched ${h(tn)}'s.${sp.length?` Have a listen at ${sp.map(x=>Passage.fmtT(x.t)).join(' and ')}.`:' Nothing to point at.'}</p>
+        ${sp.length?`<div class="chips" style="margin:0 0 6px">${sp.map((x,k)=>`<button type="button" class="chip" data-spot="${k}">${Passage.fmtT(x.t)}</button>`).join('')}</div><div id="ppSpot"></div>`:''}
+        <div class="row" style="margin-top:8px"><button class="btn sm" id="ppSend">Send to ${h(tn)}</button><button class="btn sm quiet" id="ppAgain">Record again</button></div>`;
+      $$('[data-spot]').forEach(b=>b.onclick=()=>{ $$('[data-spot]').forEach(x=>x.classList.toggle('on',x===b)); const x=sp[+b.dataset.spot];
+        $('#ppSpot').innerHTML=`<div class="flag"><span>${Passage.fmtT(x.t)} · ${h(spotText(x))}</span><span class="row" style="gap:6px;flex:none">${ref?`<button class="btn sm quiet" id="spHers">Hers</button><button class="btn sm quiet" id="spLoop">Loop hers</button>`:''}<button class="btn sm quiet" id="spMine">Mine</button></span></div>`;
+        const hb=$('#spHers'); if(hb) hb.onclick=()=>playSpan(ref,x.t,x.te,1); const lb=$('#spLoop'); if(lb) lb.onclick=()=>playSpan(ref,x.t,x.te,3); $('#spMine').onclick=()=>playSpan(mine,x.tp,x.tp+spanLen(x),1); });
+      $('#ppAgain').onclick=()=>{ ppBlob=null; ppDiff=null; res.innerHTML=''; rb.textContent='Record mine'; st.textContent='Ready when you are.'; };
+      $('#ppSend').onclick=async()=>{ if(!ppBlob||!ppDiff) return; const b=$('#ppSend'); b.disabled=true; st.textContent='Sending…';
+        try{ const i=takeDayIndex(w); const up=await uploadAudio(ppBlob, sbUser?`${me.studio_id}/passages/${sbUser.id}/${w.id||w.createdAt}-d${i}.${audioExt(ppBlob)}`:'');
+          const take={i, at:new Date().toISOString(), seconds:Math.round((Date.now()-ppStartedAt)/1000), mime:ppBlob.type, notes:ppNotes, diff:ppDiff, ...up};
+          w.takes=(w.takes||[]).filter(t=>t.i!==i); w.takes.push(take); saveCurrent(); ppBlob=null; ppDiff=null; toast('Sent to '+tn+'.'); renderTrail(false); const c=$('#pgCard'); if(c) c.scrollIntoView({block:'center'}); }
+        catch(e){ b.disabled=false; st.textContent='Could not send: '+(e.message||e); } }; };
+    rb.onclick=async()=>{
+      if(rec){ clearTimeout(ppCap); rb.disabled=true; st.textContent='Listening…'; try{ ppBlob=await recordStop(); const r=await analyseBlob(ppBlob); ppNotes=r.notes; mine.src=URL.createObjectURL(ppBlob);
+          if(ppNotes.length<4){ st.textContent=`Too few notes heard (${ppNotes.length}). Try again nearer the phone, one note at a time.`; ppBlob=null; rb.textContent='Record mine'; }
+          else { ppDiff=Passage.compare(w.passage.notes, ppNotes); st.textContent=`${r.seconds} seconds. Listen, then send it to ${tn}, or record again.`; rb.textContent='Record again'; showResult(); } }
+        catch(e){ st.textContent=e.message||String(e); rb.textContent='Record mine'; } finally{ rb.disabled=false; } return; }
+      try{ try{ ref&&ref.pause(); }catch(e){} await recordStart(); ppStartedAt=Date.now(); rb.textContent='Stop'; res.innerHTML=''; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; ppCap=setTimeout(()=>rb.onclick(), 30*1000); }
+      catch(e){ st.textContent='Microphone not available: '+(e.message||e); } };
   }
   function renderJourney(showIt){ renderTrail(showIt); }
   function renderShare(showIt){
