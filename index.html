@@ -620,6 +620,54 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     if(!w||!w.sessions) return ''; const by={}; takesOff(w).forEach(x=>by[x.i]=x.off);
     return `<div class="chips" style="margin:8px 0 0">${w.sessions.map((_,i)=>{ const L=dayLetter(w,i); const v=by[i]; return `<span class="chip">${L} <b>${v==null?'·':v===0?'✓':v}</b></span>`; }).join('')}</div>`; }
   const isChordal=inst=>/(piano|guitar|harp|keyboard|ukulele|accordion)/i.test(inst||'');
+  function spotText(sp){ // what Stuckato heard at a spot, in words that leave the judgement to the people
+    if(sp.n>1) return `${sp.n} notes differ around here`;
+    if(sp.kind==='wrong') return `${sp.expect} in the passage; ${sp.got} heard`;
+    if(sp.kind==='missing') return `${sp.expect} in the passage; not heard`;
+    return `an extra ${sp.got} heard`; }
+  function spanLen(sp){ return Math.max(0.4, sp.te-sp.t); }
+  function takeSrc(t){ return t&&(t.url||t.data)||''; }
+  function passageTeacherHTML(w, d, p){
+    const pg=w.passage; const takes=(w.takes||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+    const chordal=isChordal(p.instrument)?`<div class="note" style="margin:6px 0 0">${h(p.instrument)}: Stuckato hears one note at a time, so chords and two hands will give rough spots. Treat them as places to listen, nothing more.</div>`:'';
+    if(!pg) return `<div class="label" style="margin-top:12px">The week's passage</div><div class="daybox"><p style="margin:0 0 8px">Record the few bars that matter this week, once, the way you want them to sound. ${h(p.name||'The pupil')} records the same bars after a session; Stuckato lines the two up and shows you both where they differ. You decide what it means.</p>
+      <input id="pgLabel" placeholder="e.g. Bars 9 to 16 of the Twinkle" style="width:100%">
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="pgRec">Record</button><button class="btn sm quiet" id="pgPlay" hidden>Listen back</button><button class="btn sm" id="pgSave" hidden>Save to the week</button></div>
+      <p class="note" id="pgStatus" style="margin:8px 0 0">Up to a minute. Phone on the stand, a metre away.</p><audio id="pgAudio" controls hidden style="width:100%;margin-top:8px"></audio>${chordal}</div>`;
+    return `<div class="label" style="margin-top:12px">The week's passage</div><div class="daybox"><p style="margin:0 0 6px"><b>${h(pg.label||'This week\'s passage')}</b> · ${pg.notes.length} notes heard · recorded ${h(fmt((pg.at||'').slice(0,10)))}${pg.seconds?' · '+pg.seconds+' s':''}</p>
+      ${takeSrc(pg)?`<audio id="pgAudio" controls src="${h(takeSrc(pg))}" style="width:100%"></audio>`:'<div class="note" style="margin:0">Recorded on another device; the notes are here, the sound is not.</div>'}
+      <div class="row" style="margin-top:8px"><button class="btn sm quiet" id="pgAgain">Record again</button></div>${chordal}
+      ${takes.length?`<div class="label" style="margin-top:12px">Takes this week · notes that differed</div>${trendHTML(w)}
+        ${takes.map((t,k)=>{ const off=takeOff(t); return `<div class="daybox" style="margin-top:8px"><p style="margin:0"><b>Day ${t.i+1}</b> · ${h(fmt((t.at||'').slice(0,10)))} ${h(timeOf(t.at))} · Stuckato thinks ${t.diff.matched} of ${t.diff.total} notes matched${off===0?'. Nothing to point at.':'.'}</p>
+          ${t.diff.spots.map(sp=>`<div class="flag"><span>${Passage.fmtT(sp.t)} · ${h(spotText(sp))}</span><span class="row" style="gap:6px;flex:none">${takeSrc(pg)?`<button class="btn sm quiet" data-hear="ref" data-t="${sp.t}" data-te="${sp.te}">Yours</button>`:''}${takeSrc(t)?`<button class="btn sm quiet" data-hear="take" data-k="${k}" data-t="${sp.tp}" data-te="${sp.tp+spanLen(sp)}">Theirs</button>`:''}</span></div>`).join('')}
+          ${takeSrc(t)?`<audio id="pgTake${k}" src="${h(takeSrc(t))}" hidden></audio>`:''}
+          <div class="row" style="margin-top:8px"><button class="btn sm ${t.heard?'':'quiet'}" data-pgheard="${k}">${t.heard?'Heard it ✓':'Heard it'}</button><button class="btn sm quiet" data-pgask="${k}">Ask them</button></div></div>`; }).join('')}`
+        :`<div class="note">No take yet. After a session ${h(p.name||'the pupil')} records these bars; each day's take appears here with the spots to listen to.</div>`}</div>`;
+  }
+  let pgBlob=null, pgNotes=null, pgStartedAt=0, pgCap=null;
+  function wirePassageTeacher(w, d, p){
+    const rb=$('#pgRec'); const a=$('#pgAudio'); const st=$('#pgStatus');
+    if(rb){
+      rb.onclick=async()=>{
+        if(rec){ clearTimeout(pgCap); rb.disabled=true; st.textContent='Listening…'; try{ pgBlob=await recordStop(); const r=await analyseBlob(pgBlob); pgNotes=r.notes; a.src=URL.createObjectURL(pgBlob);
+            if(pgNotes.length<4){ st.textContent=`Too few notes heard (${pgNotes.length}). Try again nearer the phone, one note at a time.`; pgBlob=null; rb.textContent='Record'; }
+            else { st.textContent=`${pgNotes.length} notes heard in ${r.seconds} seconds. Listen back, then save.`; rb.textContent='Record again'; $('#pgPlay').hidden=false; $('#pgSave').hidden=false; } }
+          catch(e){ st.textContent=e.message||String(e); rb.textContent='Record'; } finally{ rb.disabled=false; } return; }
+        try{ await recordStart(); pgStartedAt=Date.now(); rb.textContent='Stop'; $('#pgPlay').hidden=true; $('#pgSave').hidden=true; a.hidden=true; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; pgCap=setTimeout(()=>rb.onclick(), 60*1000); }
+        catch(e){ st.textContent='Microphone not available: '+(e.message||e); } };
+      $('#pgPlay').onclick=()=>{ a.hidden=false; a.play().catch(()=>{}); };
+      $('#pgSave').onclick=async()=>{ if(!pgBlob||!pgNotes) return; const b=$('#pgSave'); b.disabled=true; st.textContent='Saving…';
+        try{ const up=await uploadAudio(pgBlob, sbUser?`${me.studio_id}/passages/${current.user_id}/${w.id||w.createdAt}.${audioExt(pgBlob)}`:'');
+          w.passage={id:uid(), at:new Date().toISOString(), by:me?.name||'', seconds:Math.round((Date.now()-pgStartedAt)/1000), mime:pgBlob.type, label:$('#pgLabel').value.trim(), notes:pgNotes, v:1, ...up}; w.takes=[];
+          saveCurrent(); pgBlob=null; pgNotes=null; toast('Saved. It is on '+(p.name||'the pupil')+"'s trail."); renderTStudent(); }
+        catch(e){ b.disabled=false; st.textContent='Could not save: '+(e.message||e); } };
+    }
+    const ag=$('#pgAgain'); if(ag) ag.onclick=()=>{ if(!confirm('Recording again clears this week\'s passage and every take against it. Go on?')) return; delete w.passage; w.takes=[]; saveCurrent(); renderTStudent(); };
+    $$('[data-hear]').forEach(b=>b.onclick=()=>{ const el=b.dataset.hear==='ref'?$('#pgAudio'):$('#pgTake'+b.dataset.k); playSpan(el, +b.dataset.t, +b.dataset.te, 1); });
+    const sorted=(w.takes||[]).slice().sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+    $$('[data-pgheard]').forEach(b=>b.onclick=()=>{ const t=sorted[+b.dataset.pgheard]; if(!t) return; t.heard=true; t.heardAt=new Date().toISOString(); saveCurrent(); renderTStudent(); });
+    $$('[data-pgask]').forEach(b=>b.onclick=()=>{ const t=sorted[+b.dataset.pgask]; if(!t) return; const q=prompt('Ask '+(p.name||'them')+' about the passage (day '+(t.i+1)+'):'); if(!q||!q.trim()) return; d.extras=d.extras||[]; d.extras.push({id:uid(), text:'About the passage (day '+(t.i+1)+'): '+q.trim(), at:new Date().toISOString(), done:false, by:me?.name||''}); t.ask=true; t.heard=true; saveCurrent(); renderTStudent(); toast('Sent.'); });
+  }
   function renderJourney(showIt){ renderTrail(showIt); }
   function renderShare(showIt){
     if(!current) return; const v=$('#v-share'); const w=week(); const p=doc().profile; const tn=doc().teacherName||'your teacher';
@@ -834,7 +882,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     v.innerHTML=`
       <button class="btn sm quiet" id="backT">← Pupils</button>
       <div class="eyebrow" style="margin-top:10px">Pupil</div><h2 class="big">${h(p.name||'Pupil')}</h2>
-      ${flags.filter(f=>!f.resolved).length?`<div class="box" style="border-color:var(--danger)"><h3 style="color:var(--danger)">Flagged for the next lesson</h3>${flags.filter(f=>!f.resolved).map(f=>`<div class="flag"><span>${h(f.text)} <span class="note" style="margin:0">· ${h(fmt(f.at.slice(0,10)))}</span></span><button class="btn sm quiet" data-res="${f.id}">Done</button></div>`).join('')}</div>`:''}
+      ${(flags.filter(f=>!f.resolved).length||(w&&stillDiffersLine(w)))?`<div class="box" style="border-color:var(--danger)"><h3 style="color:var(--danger)">Flagged for the next lesson</h3>${flags.filter(f=>!f.resolved).map(f=>`<div class="flag"><span>${h(f.text)} <span class="note" style="margin:0">· ${h(fmt(f.at.slice(0,10)))}</span></span><button class="btn sm quiet" data-res="${f.id}">Done</button></div>`).join('')}${w&&stillDiffersLine(w)?`<div class="flag"><span>${h(stillDiffersLine(w))}</span></div>`:''}</div>`:''}
       ${w?`<div class="card"><div class="label">This week</div>${staveWeek(w)}<div class="note" style="margin:0">${doneCount(w)} of ${w.sessions.length} days done · felt: ${(w.done||[]).map(x=>x.feel).filter(Boolean).join(', ')||'nothing logged yet'} · next lesson ${h(fmt(w.nextLesson))}</div>
         ${workTally(w).length?`<div class="label" style="margin-top:12px">Worked on most this week</div><ul class="ticks" style="margin-top:4px">${workTally(w).map(([it,c])=>`<li style="cursor:default"><span style="flex:1">${h(it)}</span><span class="pill on">${c} ${c===1?'day':'days'}</span></li>`).join('')}</ul>`:'<div class="note">What the pupil ticks after each session appears here, most-worked first, so you can plan the lesson.</div>'}
         <div class="label" style="margin-top:12px">What they wrote, day by day</div>
@@ -851,6 +899,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
           <div class="row" style="margin-top:8px"><input id="recReply" placeholder="One line back, e.g. Lovely tone. The second phrase rushes." value="${h(w.recording.reply||'')}" style="flex:1"><button class="btn sm" id="recReplySend">Send</button></div>
           <div class="note">Your line goes to their Today screen now and is ready as next week's "What you did well".</div></div>`
           :`<div class="note">${recordingDue(w)?'Due now; nothing sent yet. The week\'s bonus waits for it.':'The day before the lesson the pupil records one play-through of the piece. It appears here, and the week\'s two bonus tokens wait for it.'}</div>`}
+        ${passageTeacherHTML(w, d, p)}
         ${d.weeks.length>1?`<div class="label" style="margin-top:12px">The last ${Math.min(5,d.weeks.length)} weeks</div>${staveMonth(d.weeks)}`:''}${p.goalDate?`<div class="note">${h(p.goalLabel||'Goal')} · ${h(fmtL(p.goalDate))} · ${weeksBetween(today(),p.goalDate)} weeks to go${goalLight(d)?' · '+lightHTML(d):''}</div>`:''}
         <div class="note">Tokens: ${(d.tokens?.earned||0)-(d.tokens?.redeemed||0)} available. ${((d.tokens?.earned||0)-(d.tokens?.redeemed||0))>=6?'<button class="btn sm" id="award">Mark reward given'+(p.reward?' ('+h(p.reward)+')':'')+'</button>':''}</div></div>`:''}
       <div class="card"><h3>Profile</h3>
@@ -906,6 +955,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const aw=$('#award'); if(aw) aw.onclick=()=>{ d.tokens=d.tokens||{earned:0,redeemed:0}; d.tokens.redeemed=(d.tokens.redeemed||0)+6; saveCurrent(); renderTStudent(); toast('Reward marked as given.'); };
     $('#gen').onclick=generateWeek; wireScales();
     $$('[data-dictate]').forEach(b=>b.onclick=()=>dictate(b.dataset.dictate,b));
+    if(w) wirePassageTeacher(w, d, p);
     if(preview) renderPreview();
   }
   async function generateWeek(){
