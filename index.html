@@ -5,28 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stuckato</title>
 <meta name="description" content="Short bursts. Real progress. Couch to 5K for practising an instrument, in a choir or in an orchestra. Your teacher sets the week; Stuckato gets you to practise every day.">
-<link rel="icon" type="image/svg+xml" href="icon-tile.svg?v=5"><link rel="apple-touch-icon" href="icon-192.png?v=5"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111111">
+<link rel="icon" type="image/svg+xml" href="icon-tile.svg?v=7"><link rel="apple-touch-icon" href="icon-192.png?v=7"><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 <style>
+/* One theme: black paper, beige ink (the logo's colours). */
 :root{
-  --paper:#FFFFFF; --stave:#E9E9E9; --card:#FFFFFF; --ink:#111111; --muted:#666666; --line:#DEDEDE;
-  --amber:#111111; --amber-ink:#FFFFFF; --varnish:#111111; --sage:#444444; --gold:#111111; --danger:#B00020;
-  --tintA:#F4F4F4; --tintB:#F7F7F7; --tintC:#EFEFEF; --shadow:0 12px 30px rgba(0,0,0,.08);
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#111111; --stave:#262626; --card:#1A1A1A; --ink:#FFFFFF; --muted:#A3A3A3; --line:#333333;
-    --amber:#FFFFFF; --amber-ink:#111111; --varnish:#FFFFFF; --sage:#CCCCCC; --gold:#FFFFFF; --danger:#FF6B6B;
-    --tintA:#1F1F1F; --tintB:#1C1C1C; --tintC:#242424; --shadow:0 12px 30px rgba(0,0,0,.5);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"]{
-  --paper:#111111; --stave:#262626; --card:#1A1A1A; --ink:#FFFFFF; --muted:#A3A3A3; --line:#333333;
-  --amber:#FFFFFF; --amber-ink:#111111; --varnish:#FFFFFF; --sage:#CCCCCC; --gold:#FFFFFF; --danger:#FF6B6B;
-  --tintA:#1F1F1F; --tintB:#1C1C1C; --tintC:#242424; --shadow:0 12px 30px rgba(0,0,0,.5);
+  --paper:#000000; --stave:#17130C; --card:#100D08; --ink:#F5E4CA; --muted:#B3A48C; --line:#3A3327;
+  --amber:#F5E4CA; --amber-ink:#000000; --varnish:#F5E4CA; --sage:#D3C3A6; --gold:#F5E4CA; --danger:#F08A7A;
+  --tintA:#14110B; --tintB:#0E0C08; --tintC:#1A160E; --shadow:0 12px 30px rgba(0,0,0,.6);
+  --ok:#7CC48F; --warn:#E6B04D;
   color-scheme: dark;
 }
 *{box-sizing:border-box}
@@ -42,7 +30,7 @@ label.l{display:block; font-size:13px; font-weight:800; letter-spacing:.06em; te
 .wrap{max-width:860px; margin:0 auto; padding:18px 18px 90px}
 header.top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0 14px; border-bottom:1px solid var(--line); margin-bottom:16px}
 .brand{display:block} .brand h1{margin:0; line-height:1}
-.brand small{display:block; color:var(--muted); font-size:14px; font-weight:700; margin-top:4px}
+.slogan{font-size:15px; font-weight:600; letter-spacing:.04em; color:var(--muted); margin:0 0 12px}
 .auth{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted)}
 .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:999px; padding:14px 22px; font-weight:700; background:var(--amber); color:var(--amber-ink); font-size:16px}
 .btn.block{width:100%; padding:18px 22px; font-size:19px}
@@ -55,19 +43,18 @@ header.top{display:flex; align-items:center; justify-content:space-between; gap:
 .muted{color:var(--muted)}
 .label{font-size:13px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 6px}
 .big{font-size:38px; line-height:1.06; margin:2px 0 14px; color:var(--varnish)}
-.card{background:var(--card); border:1.5px solid var(--line); border-radius:24px; padding:18px 20px; margin-bottom:14px; box-shadow:0 2px 0 rgba(60,40,20,.04)}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:24px; padding:18px 20px; margin-bottom:14px}
 .card h3{font-size:22px; margin-bottom:8px}
 .box{padding:18px 20px; border-radius:24px; border:1.5px solid var(--line); margin-bottom:14px}
 .light{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin:0 5px 2px 0;background:var(--muted)}
-.light.g{background:#2E8B57}.light.a{background:#D98A00}.light.r{background:var(--danger)}
-.jmap .wash{opacity:.09}.jmap .wash.g{fill:#2E8B57}.jmap .wash.a{fill:#D98A00}.jmap .wash.r{fill:#B00020}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .jmap .wash{opacity:.18} } :root[data-theme="dark"] .jmap .wash{opacity:.18}
+.light.g{background:var(--ok)}.light.a{background:var(--warn)}.light.r{background:var(--danger)}
+.jmap .wash{opacity:.18}.jmap .wash.g{fill:var(--ok)}.jmap .wash.a{fill:var(--warn)}.jmap .wash.r{fill:var(--danger)}
 #fermata{position:fixed;inset:0;background:var(--paper);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:60;text-align:center;padding:24px;cursor:pointer}
 #fermata.on{display:flex}
 html.clean #demoBar,html.clean #startbar{display:none!important}
-#modal{position:fixed;inset:0;background:rgba(17,17,17,.55);display:none;align-items:flex-end;justify-content:center;z-index:70;padding:16px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:70;padding:16px}
 #modal.on{display:flex}
-#modal .sheet{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;width:100%;max-width:520px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#modal .sheet{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;width:100%;max-width:520px;box-shadow:0 12px 40px rgba(0,0,0,.7)}
 #modal .sheet h3{margin:0 0 6px;font-size:22px;line-height:1.15}
 #modal .sheet p{margin:0 0 12px;font-size:16px;color:var(--ink)}
 #modal .feel{grid-template-columns:1fr 1fr}
@@ -114,7 +101,7 @@ details.defs summary{cursor:pointer; font-weight:700} details.defs dl{margin:8px
 .path{list-style:none; margin:8px 0 0; padding:0 0 0 16px; border-left:2px dashed var(--line)}
 .path li{position:relative; padding:6px 0 12px 18px}
 .path li::before{content:""; position:absolute; left:-24px; top:11px; width:14px; height:14px; border-radius:50%; background:var(--paper); border:2px solid var(--line)}
-.path li.done::before{background:var(--amber); border-color:var(--amber)} .path li.now::before{border-color:var(--amber); box-shadow:0 0 0 5px rgba(200,121,42,.18)} .path li.lesson::before{border-radius:3px; background:var(--varnish); border-color:var(--varnish)}
+.path li.done::before{background:var(--amber); border-color:var(--amber)} .path li.now::before{border-color:var(--amber); box-shadow:0 0 0 5px rgba(245,228,202,.18)} .path li.lesson::before{border-radius:3px; background:var(--varnish); border-color:var(--varnish)}
 .path .t{font-weight:600} .path .d{font-size:13px; color:var(--muted)}
 .check{list-style:none; margin:6px 0 0; padding:0}
 .check li{display:flex; gap:10px; align-items:flex-start; padding:6px 0; cursor:pointer}
@@ -137,7 +124,7 @@ details.defs summary{cursor:pointer; font-weight:700} details.defs dl{margin:8px
 .toast{position:fixed; left:50%; bottom:78px; transform:translateX(-50%); background:var(--varnish); color:var(--paper); padding:10px 16px; border-radius:999px; font-weight:600; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s; z-index:9}
 .toast.show{opacity:1}
 dialog{border:none; border-radius:22px; padding:0; width:min(560px,92vw); background:var(--card); color:var(--ink); box-shadow:var(--shadow)}
-dialog::backdrop{background:rgba(30,26,22,.5)} dialog .in{padding:22px} dialog h2{font-size:26px; margin-bottom:10px}
+dialog::backdrop{background:rgba(0,0,0,.65)} dialog .in{padding:22px} dialog h2{font-size:26px; margin-bottom:10px}
 .dlgrow{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
 .session-preview .s{border-top:1px solid var(--line); padding:10px 0}
 .session-preview .s b{font-family:"Plus Jakarta Sans", system-ui, sans-serif; font-weight:400; font-size:20px}
@@ -153,10 +140,10 @@ dialog::backdrop{background:rgba(30,26,22,.5)} dialog .in{padding:22px} dialog h
 .script{font-family:"Plus Jakarta Sans", system-ui, sans-serif; font-size:19px; line-height:1.45; padding:14px 16px; background:var(--tintA); border-radius:14px; border:1px solid var(--line)}
 .mic{width:auto; padding:8px 12px; font-size:13px}
 .demo-bar{position:sticky; top:0; z-index:6; background:var(--varnish); color:var(--paper); padding:8px 12px; border-radius:12px; margin-bottom:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:13.5px}
-.demo-bar .seg{display:inline-flex; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.25)}
+.demo-bar .seg{display:inline-flex; border-radius:999px; overflow:hidden; border:1px solid rgba(0,0,0,.25)}
 .demo-bar .seg button{background:transparent; color:var(--paper); border:none; padding:6px 12px; font-weight:600; font-size:13px}
 .demo-bar .seg button.on{background:var(--paper); color:var(--ink)}
-.demo-bar .x{margin-left:auto; background:transparent; border:1px solid rgba(255,255,255,.35); color:var(--paper); border-radius:999px; padding:5px 10px; font-size:12.5px}
+.demo-bar .x{margin-left:auto; background:transparent; border:1px solid rgba(0,0,0,.35); color:var(--paper); border-radius:999px; padding:5px 10px; font-size:12.5px}
 canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid var(--line); display:block; margin:10px auto}
 @media (prefers-reduced-motion: reduce){ .rec .blink{animation:none} }
 @media (prefers-reduced-motion: reduce){ .toast{transition:none} }
@@ -166,12 +153,13 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 <div class="wrap">
   <div id="demoBar" hidden></div>
   <header class="top">
-    <div class="brand"><h1><img src="wordmark.svg?v=6" alt="Stuckato" style="height:40px;display:block"></h1><small>Short bursts. Real progress.</small></div>
+    <div class="brand"><h1><img src="wordmark.svg?v=7" alt="Stuckato" style="height:40px;display:block"></h1></div>
     <div class="auth" id="auth"></div>
   </header>
 
   <!-- LANDING -->
   <section class="view on" id="v-landing">
+    <p class="slogan">Short bursts. Real progress.</p>
     <div class="card"><h2 class="big">Practise every day. Your teacher sees it.</h2>
       <p>A short session every day, in your teacher's words. Tick what you worked on. Your teacher plans the next lesson from it.</p></div>
     <div class="row" style="margin-top:8px"><button class="btn block" id="landSignin">Sign in with email</button></div>
@@ -620,43 +608,44 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const F=(wt,px)=>`${wt} ${px}px "Plus Jakarta Sans", system-ui, sans-serif`;
     const lines=(t,mw,font)=>{ ctx.font=font; const words=String(t).split(' '); const out=[]; let line=''; for(const wd of words){ const test=line?line+' '+wd:wd; if(ctx.measureText(test).width>mw&&line){ out.push(line); line=wd; } else line=test; } if(line) out.push(line); return out; };
     const wrap=(t,x,y,mw,lh,font,col)=>{ const ls=lines(t,mw,font); ctx.font=font; ctx.fillStyle=col; ls.forEach((l,i)=>ctx.fillText(l,x,y+i*lh)); return y+ls.length*lh; };
-    const box=(y,hh)=>{ ctx.fillStyle='#FFFFFF'; ctx.strokeStyle='#DEDEDE'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(40,y,W-80,hh,26); ctx.fill(); ctx.stroke(); };
-    const label=(t,y)=>{ ctx.fillStyle='#666666'; ctx.font=F(800,18); ctx.fillText(t.toUpperCase(),70,y); };
+    const box=(y,hh)=>{ ctx.fillStyle='#000000'; ctx.strokeStyle='#3A3327'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(40,y,W-80,hh,26); ctx.fill(); ctx.stroke(); };
+    const label=(t,y)=>{ ctx.fillStyle='#B3A48C'; ctx.font=F(800,18); ctx.fillText(t.toUpperCase(),70,y); };
     const top=490; const fb=w&&(w.line||w.encouragement); const list=w&&w.checklist?w.checklist.slice(0,4):[];
     let hh=42; if(fb) hh+=36+lines(fb,W-140,F(700,28)).length*38+40; if(list.length){ hh+=36; list.forEach(t=>hh+=lines(t,W-180,F(600,24)).length*30+8); } if(!fb&&!list.length) hh+=40; hh+=18;
     const goal=p.goalDate&&doc().weeks.length?{label:p.goalLabel||'Goal', date:p.goalDate, start:(doc().weeks[0].lessonDate||doc().weeks[0].createdAt)}:null;
     const H=top+hh+40+(goal?200:0); if(c.height!==H) c.height=H;
-    const gl=goalLight(); const WASH={g:['#E4F1E9','#CFE6D8','#2E8B57'],a:['#FBF0DC','#F5E2BE','#D98A00'],r:['#F8E3E6','#F0CCD2','#B00020']}[gl?gl.k:'']||['#FFFFFF','#E9E9E9','#666666'];
+    const gl=goalLight(); const WASH={g:['#0B1F13','#183A25','#7CC48F'],a:['#231A08','#4A3710','#E6B04D'],r:['#240E0B','#4A1D18','#F08A7A']}[gl?gl.k:'']||['#000000','#1A160E','#B3A48C'];
     ctx.fillStyle=WASH[0]; ctx.fillRect(0,0,W,H);
     ctx.strokeStyle=WASH[1]; ctx.lineWidth=2; for(let y=40;y<H;y+=42){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+    ctx.fillStyle='#B3A48C'; ctx.font=F(600,18); ctx.fillText('Short bursts. Real progress.',70,H-14);
     // box 1: the dates
     const from=w?fmt(w.lessonDate||w.createdAt):fmt(today()); const to=w&&w.nextLesson?fmt(w.nextLesson):null;
-    box(40,120); ctx.fillStyle='#111111'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
-    if(gl){ ctx.font=F(800,22); const tw=ctx.measureText(gl.word).width+36; ctx.fillStyle=WASH[2]; ctx.beginPath(); ctx.roundRect(W-70-tw,68,tw,40,20); ctx.fill(); ctx.fillStyle='#FFFFFF'; ctx.fillText(gl.word,W-70-tw+18,96); }
+    box(40,120); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
+    if(gl){ ctx.font=F(800,22); const tw=ctx.measureText(gl.word).width+36; ctx.fillStyle=WASH[2]; ctx.beginPath(); ctx.roundRect(W-70-tw,68,tw,40,20); ctx.fill(); ctx.fillStyle='#000000'; ctx.fillText(gl.word,W-70-tw+18,96); }
     // box 2: the pupil's week
     let y=190; box(y,270); label((p.name||'My')+"'s week",y+42);
-    ctx.fillStyle='#111111'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
+    ctx.fillStyle='#F5E4CA'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
     const stats=[[String(n)+'/'+tot,'days practised'],[String(mins),'minutes practised'],[String(tokensView().avail),'points earned']];
-    stats.forEach((st,i)=>{ const x=70+i*236; ctx.fillStyle='#F4F4F4'; ctx.beginPath(); ctx.roundRect(x,y+132,216,108,18); ctx.fill(); ctx.fillStyle='#111111'; ctx.font=F(800,44); ctx.fillText(st[0],x+20,y+188); ctx.fillStyle='#666666'; ctx.font=F(600,18); ctx.fillText(st[1],x+20,y+222); });
+    stats.forEach((st,i)=>{ const x=70+i*236; ctx.fillStyle='#17130C'; ctx.beginPath(); ctx.roundRect(x,y+132,216,108,18); ctx.fill(); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,44); ctx.fillText(st[0],x+20,y+188); ctx.fillStyle='#B3A48C'; ctx.font=F(600,18); ctx.fillText(st[1],x+20,y+222); });
     // box 3: feedback from the last lesson, and what is wanted for the next one
     box(top,hh); y=top+42;
-    if(fb){ label('Feedback from the last lesson',y); y=wrap(fb,70,y+36,W-140,38,F(700,28),'#111111'); ctx.fillStyle='#666666'; ctx.font=F(600,19); ctx.fillText(tn,70,y-4); y+=40; }
-    if(list.length){ label('For next lesson:',y); y+=36; list.forEach((t,k)=>{ const on=(w.ticks||[]).includes(k); ctx.fillStyle=on?'#111111':'#FFFFFF'; ctx.strokeStyle=on?'#111111':'#DEDEDE'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(70,y-20,24,24,6); ctx.fill(); ctx.stroke(); y=wrap(t,108,y,W-180,30,F(600,24),on?'#666666':'#111111')+8; }); }
-    if(!fb&&!list.length){ ctx.fillStyle='#666666'; ctx.font=F(600,22); ctx.fillText('Feedback appears here after the next lesson.',70,y+2); }
+    if(fb){ label('Feedback from the last lesson',y); y=wrap(fb,70,y+36,W-140,38,F(700,28),'#F5E4CA'); ctx.fillStyle='#B3A48C'; ctx.font=F(600,19); ctx.fillText(tn,70,y-4); y+=40; }
+    if(list.length){ label('For next lesson:',y); y+=36; list.forEach((t,k)=>{ const on=(w.ticks||[]).includes(k); ctx.fillStyle=on?'#F5E4CA':'#000000'; ctx.strokeStyle=on?'#F5E4CA':'#3A3327'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(70,y-20,24,24,6); ctx.fill(); ctx.stroke(); y=wrap(t,108,y,W-180,30,F(600,24),on?'#B3A48C':'#F5E4CA')+8; }); }
+    if(!fb&&!list.length){ ctx.fillStyle='#B3A48C'; ctx.font=F(600,22); ctx.fillText('Feedback appears here after the next lesson.',70,y+2); }
     if(goal){ // box 4: the goal as the end of a piece: a note a week, filled when practised, the double bar line on the day
       const gy=top+hh+30; box(gy,170); label(goal.label+' · '+fmtL(goal.date),gy+42);
       const gw=goalWeeks(doc().weeks, goal.date); const N=gw.length; const X0=70, X1=W-70; const dx=Math.min(30,(X1-X0-30)/N); const sy=gy+70;
-      ctx.strokeStyle='#DEDEDE'; ctx.lineWidth=1.5; for(let k=0;k<5;k++){ ctx.beginPath(); ctx.moveTo(X0,sy+k*10); ctx.lineTo(X1,sy+k*10); ctx.stroke(); }
+      ctx.strokeStyle='#3A3327'; ctx.lineWidth=1.5; for(let k=0;k<5;k++){ ctx.beginPath(); ctx.moveTo(X0,sy+k*10); ctx.lineTo(X1,sy+k*10); ctx.stroke(); }
       for(let k=4;k<N;k+=4){ const x=X0+k*dx; ctx.beginPath(); ctx.moveTo(x,sy); ctx.lineTo(x,sy+40); ctx.stroke(); }
-      const xe=X0+N*dx+6; ctx.strokeStyle='#111111'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(xe,sy); ctx.lineTo(xe,sy+40); ctx.stroke(); ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(xe+6,sy); ctx.lineTo(xe+6,sy+40); ctx.stroke();
+      const xe=X0+N*dx+6; ctx.strokeStyle='#F5E4CA'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(xe,sy); ctx.lineTo(xe,sy+40); ctx.stroke(); ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(xe+6,sy); ctx.lineTo(xe+6,sy+40); ctx.stroke();
       const sc=dx<16?0.6:0.85;
       gw.forEach((g,k)=>{ const x=X0+k*dx+dx/2, yy=sy+30-((k*7)%5)*5; ctx.save(); ctx.translate(x,yy); ctx.scale(sc,sc);
-        if(g.now){ ctx.strokeStyle='#111111'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,15,0,7); ctx.stroke(); }
-        ctx.rotate(-22*Math.PI/180); ctx.beginPath(); ctx.ellipse(0,0,9,6.5,0,0,7); ctx.fillStyle=g.practised?'#111111':'#FFFFFF'; ctx.fill(); ctx.strokeStyle='#111111'; ctx.lineWidth=2; ctx.stroke(); ctx.rotate(22*Math.PI/180);
-        ctx.fillStyle='#111111'; ctx.fillRect(7,-34,2.2,34); ctx.restore(); });
-      ctx.fillStyle='#666666'; ctx.font=F(600,15); ctx.fillText(fmtS(goal.start),X0,sy+62); ctx.textAlign='right'; ctx.fillStyle='#111111'; ctx.font=F(800,15); ctx.fillText(fmtS(goal.date),X1,sy+62); ctx.textAlign='left';
+        if(g.now){ ctx.strokeStyle='#F5E4CA'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,15,0,7); ctx.stroke(); }
+        ctx.rotate(-22*Math.PI/180); ctx.beginPath(); ctx.ellipse(0,0,9,6.5,0,0,7); ctx.fillStyle=g.practised?'#F5E4CA':'#000000'; ctx.fill(); ctx.strokeStyle='#F5E4CA'; ctx.lineWidth=2; ctx.stroke(); ctx.rotate(22*Math.PI/180);
+        ctx.fillStyle='#F5E4CA'; ctx.fillRect(7,-34,2.2,34); ctx.restore(); });
+      ctx.fillStyle='#B3A48C'; ctx.font=F(600,15); ctx.fillText(fmtS(goal.start),X0,sy+62); ctx.textAlign='right'; ctx.fillStyle='#F5E4CA'; ctx.font=F(800,15); ctx.fillText(fmtS(goal.date),X1,sy+62); ctx.textAlign='left';
       const wk=doc().weeks, practised=wk.filter(x=>doneCount(x)>0).length, complete=wk.filter(x=>x.sessions&&doneCount(x)===x.sessions.length).length;
-      ctx.fillStyle='#111111'; ctx.font=F(700,22); ctx.fillText(`${practised} ${practised===1?'week':'weeks'} practised, ${complete} complete. A note a week to the double bar.`,70,gy+156);
+      ctx.fillStyle='#F5E4CA'; ctx.font=F(700,22); ctx.fillText(`${practised} ${practised===1?'week':'weeks'} practised, ${complete} complete. A note a week to the double bar.`,70,gy+156);
     }
   }
 
