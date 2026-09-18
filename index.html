@@ -174,7 +174,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <p>A short session every day, in your teacher's words. Tick what you worked on. Your teacher plans the next lesson from it.</p></div>
     <div class="row" style="margin-top:8px"><button class="btn block" id="landSignin">Sign in with email</button></div>
     <div class="row" style="margin-top:10px"><button class="btn quiet" id="landDemo">See how it works</button><button class="btn quiet" id="landLocal">Try it on this device</button></div>
-    <p class="note">Your teacher sets up the account and gives you a code. Join with the code and the week is waiting. A parent holds a young child's account.</p>
+    <p class="note">Your teacher sets up the account and gives you a code. Join with the code and the week is waiting. A parent holds a young child's account; the child still does the practising themselves.</p>
     <p class="note" id="landNote"></p>
   </section>
 
@@ -190,7 +190,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <div class="card"><h3>I'm a pupil</h3>
         <label class="l" for="obCode">Teacher's code</label><input id="obCode" placeholder="e.g. A3F9C2" maxlength="6" style="text-transform:uppercase;letter-spacing:.2em">
         <label class="l" for="obSName">Pupil's name</label><input id="obSName" placeholder="Emre"><p class="note">In a choir or orchestra? Your part (alto, second violin) can be set once you are in.</p>
-        <p class="note">Under 13? A parent or guardian should be the one signed in here, with their own email. The account is theirs; the practice is the pupil's.</p>
+        <p class="note">Under 13? A parent or guardian signs up here with their own email and stays signed in on the pupil's device. The account is theirs; the practising is the pupil's, on their own, with no adult needed in the room.</p>
         <button class="btn block" id="obJoin" style="margin-top:12px">Join</button></div>
     </div>
     <div class="status" id="obStatus"></div>
@@ -959,7 +959,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     let saved=null; try{ saved=JSON.parse(localStorage.getItem('stuckato.demo.v1')||'null'); }catch(e){} students=saved||demoSeed(); current=students[0];
     renderAuth(); renderDemoBar(); setDemoRole('pupil');
   }
-  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=false; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Parent's view</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('stuckato.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
+  function renderDemoBar(){ const b=$('#demoBar'); b.className='demo-bar'; b.hidden=false; b.innerHTML=`<span><b>Demo.</b> Nothing here is saved to an account. Switch sides:</span><span class="seg"><button data-r="pupil" class="${demoRole==='pupil'?'on':''}">Pupil</button><button data-r="teacher" class="${demoRole==='teacher'?'on':''}">Teacher</button><button data-r="share" class="${demoRole==='share'?'on':''}">Shared card</button></span><button class="x" id="demoReset">Reset demo</button>`; $$('#demoBar [data-r]').forEach(x=>x.onclick=()=>setDemoRole(x.dataset.r)); $('#demoReset').onclick=()=>{ try{ localStorage.removeItem('stuckato.demo.v1'); }catch(e){} students=demoSeed(); current=students[0]; setDemoRole(demoRole); }; }
   function setDemoRole(r){ demoRole=r; renderDemoBar(); if(r==='teacher'){ setTabs('teacher'); renderTeacher(); } else if(r==='share'){ current=students[0]; setTabs('student'); renderShare(); } else { current=students[0]; setTabs('student'); renderToday(); } }
 
   // ------------------------------------------------------------ the morning message: push subscription + test send
