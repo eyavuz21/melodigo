@@ -243,6 +243,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
 <dialog id="dlg"><div class="in" id="dlgIn"></div></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="passage.js?v=1"></script>
 <script>
 (function(){
   'use strict';
@@ -583,13 +584,42 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       try{ const up=await uploadRecording(recBlob, w); w.recording={at:new Date().toISOString(), seconds:Math.round((Date.now()-recStartedAt)/1000), size:recBlob.size, mime:recBlob.type, ...up}; const bonus=maybeWeekBonus(w); saveCurrent(); recBlob=null; toast(bonus?'Sent. Week complete: two bonus tokens.':'Sent to '+tn+'.'); renderTrail(false); }
       catch(e){ b.disabled=false; st.textContent='Could not send: '+(e.message||e); } };
   }
-  async function uploadRecording(blob, w){
-    if(mode==='cloud'&&sb&&me?.studio_id&&sbUser){ const ext=(blob.type||'').includes('mp4')?'m4a':(blob.type||'').includes('ogg')?'ogg':'webm'; const path=`${me.studio_id}/recordings/${sbUser.id}/${w.id||w.createdAt}.${ext}`;
+  const audioExt=blob=>(blob.type||'').includes('mp4')?'m4a':(blob.type||'').includes('ogg')?'ogg':'webm';
+  async function uploadAudio(blob, path){ // to the studio's folder in the bucket on the live site; otherwise kept on the device as a data URL if small
+    if(mode==='cloud'&&sb&&me?.studio_id&&sbUser&&path){
       const {error}=await sb.storage.from('melodigo-audio').upload(path, blob, {contentType:blob.type||'audio/webm', upsert:true}); if(error) throw new Error(error.message||'upload failed');
       return {url: sb.storage.from('melodigo-audio').getPublicUrl(path).data.publicUrl}; }
-    if(blob.size<1.2*1024*1024){ const b64=await toB64(blob); return {data:`data:${blob.type||'audio/webm'};base64,${b64}`}; } // small enough to keep on the device
+    if(blob.size<1.2*1024*1024){ const b64=await toB64(blob); return {data:`data:${blob.type||'audio/webm'};base64,${b64}`}; }
     return {};
   }
+  const uploadRecording=(blob, w)=>uploadAudio(blob, sbUser?`${me?.studio_id}/recordings/${sbUser.id}/${w.id||w.createdAt}.${audioExt(blob)}`:'');
+
+  // ------------------------------------------------------------ the week's passage: analysis and playback (the maths is in passage.js)
+  async function analyseBlob(blob){ // the recording to a note list, on this device; the other side never needs the audio to draw the comparison
+    let buf; const AC=window.AudioContext||window.webkitAudioContext; const ac=new AC();
+    try{ buf=await ac.decodeAudioData(await blob.arrayBuffer()); }catch(e){ throw new Error('Could not read the recording. Try again.'); } finally{ try{ ac.close(); }catch(e){} }
+    const n=buf.length, ch=buf.numberOfChannels; const mono=new Float32Array(n); for(let c=0;c<ch;c++){ const d=buf.getChannelData(c); for(let i=0;i<n;i++) mono[i]+=d[i]/ch; }
+    const x=Passage.resample(mono, buf.sampleRate, 16000);
+    return {notes: Passage.notesFrom(Passage.pitchTrack(x, 16000)), seconds: Math.round(buf.duration)};
+  }
+  function playSpan(a, from, to, times){ // play one spot of a clip, with a little room either side, once or looped a few times
+    if(!a||!a.src) return; let n=times||1; a.playbackRate=1; try{ a.pause(); }catch(e){}
+    const start=Math.max(0,from-0.3), end=to+0.3; const go=()=>{ a.currentTime=start; a.play().catch(()=>{}); };
+    a.ontimeupdate=()=>{ if(a.currentTime>=end||a.ended){ if(--n>0) go(); else { a.pause(); a.ontimeupdate=null; } } };
+    go(); }
+  function slowPlay(a, on){ if(!a||!a.src) return; a.ontimeupdate=null; try{ a.pause(); }catch(e){} a.preservesPitch=true; a.webkitPreservesPitch=true; a.playbackRate=on?0.6:1; a.currentTime=0; a.play().catch(()=>{}); }
+  function takeDayIndex(w){ // which day a take belongs to: today's session if there is one, else the last day done, else the next day up
+    const done=(w.done||[]).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')); const td=done.filter(d=>(d.at||'').slice(0,10)===today()).pop(); if(td) return td.i;
+    if(done.length) return done[done.length-1].i; const i=nextIndex(w); return i<0?0:i; }
+  const takeOff=t=>t&&t.diff?(t.diff.wrong||0)+(t.diff.missing||0)+(t.diff.extra||0):null;
+  function takesOff(w){ return (w&&w.takes||[]).map(t=>({i:t.i, off:takeOff(t), at:t.at})).sort((a,b)=>a.i-b.i); }
+  function latestTake(w){ return (w&&w.takes||[]).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')).pop()||null; }
+  function stillDiffersLine(w){ const t=latestTake(w); if(!t||!t.diff||!t.diff.spots.length) return ''; const day=fmt((t.at||'').slice(0,10)).split(' ')[0];
+    return `The passage: still differs at ${t.diff.spots.map(sp=>Passage.fmtT(sp.t)).join(', ')} on ${day}'s take.`; }
+  function trendHTML(w){ // the week's days as chips: notes off per take, a dot for days without one
+    if(!w||!w.sessions) return ''; const by={}; takesOff(w).forEach(x=>by[x.i]=x.off);
+    return `<div class="chips" style="margin:8px 0 0">${w.sessions.map((_,i)=>{ const L=dayLetter(w,i); const v=by[i]; return `<span class="chip">${L} <b>${v==null?'·':v===0?'✓':v}</b></span>`; }).join('')}</div>`; }
+  const isChordal=inst=>/(piano|guitar|harp|keyboard|ukulele|accordion)/i.test(inst||'');
   function renderJourney(showIt){ renderTrail(showIt); }
   function renderShare(showIt){
     if(!current) return; const v=$('#v-share'); const w=week(); const p=doc().profile; const tn=doc().teacherName||'your teacher';
