@@ -12,6 +12,16 @@ Every practice app is one of two things: it listens to you play and scores the n
 
 Stuckato has two sides. The **teacher** writes a thirty-second note after each lesson (what we worked on, what to prepare, one line for the week) and sets how many minutes a day; Stuckato turns it into that pupil's week: one short guided session for every day, with step-by-step captions in the teacher's voice, a work list, and a checklist for the next lesson. The **pupil** runs each day's session (or practises on their own and just ticks), then ticks what they worked on from the work list, flags questions and breakthroughs while they're fresh, and keeps a streak that forgives a missed day. Before the next lesson the teacher sees what was worked on most, and the next week is planned around it. A **conductor** does the same for a whole choir or orchestra: one rehearsal note becomes a week for every member, each for their own part.
 
+**Why not Yousician?** Yousician is for people without a teacher: it listens through the phone, lights each note green or red against its own library, and covers guitar, piano, bass, ukulele and voice. Stuckato is for the six days between lessons, run by the teacher. The week is her note, in her voice, for the actual piece; the teacher sees what happened; violin, cello, wind, brass and choirs are in; the point is turning up on Wednesday, not scoring notes. Where Stuckato does listen (the week's passage, below), it compares the pupil to the teacher's own playing, points at the bars that differ, and leaves the judgement to her. Nobody else has the teacher in the loop.
+
+## What's in v0.8 (19 September 2026)
+
+- **The week's passage.** On the pupil page the teacher records the few bars that matter this week, up to a minute, once, the way she wants them to sound. The pupil's trail gets a card with her clip (*Play*, *Play slowly* at 60% with the pitch kept) and *Record mine*: the same bars, thirty seconds at most. On the phone, Stuckato turns both clips into note lists (pitch tracking in the browser, `passage.js`, no server), lines them up, and says "Stuckato thinks 13 of 14 notes matched Melisande's. Have a listen at 0:05." Each spot is a chip: *Hers*, *Loop hers* (three times), *Mine*. Send it and the take goes to the teacher.
+- **Triage for the teacher's ears.** The pupil page shows each day's take with its spots and *Yours* / *Theirs* buttons that play just those seconds, so she hears the twenty seconds that matter instead of a five-minute play-through. *Heard it* and *Ask them* work as for the sentence. The week's trend (Monday three notes off, Thursday one) is on both sides, on the parent card ("The passage: 13 of 14 notes matched Melisande's on Friday, up from 11 on Thursday"), in the lesson boxes ("The passage: still differs at 0:05 on Friday's take") and in the pilot CSV (`passage_takes`, `passage_first_off`, `passage_last_off`).
+- **What it does not do, on purpose.** It never says "wrong": phone microphones, vibrato, open-string ring and double stops produce the odd false spot, so every spot is a place to listen, and the wording says so ("Stuckato hears roughly. Melisande decides."). It hears one note at a time: piano, guitar and harp get a note that chords will give rough spots. There is no real-time green-and-red, no score, no photo of the music, no rhythm verdict. No token for a take; tokens still come with the sentence.
+- Repeated notes are split on the loudness dip (a bow change, a re-struck key), so Twinkle comes out note for note. Fourteen unit tests in `test/` (`npm test`) cover the pitch tracker, note segmentation, alignment and comparison on synthesised tones; the real test is a cello through a phone.
+- Demo view: `?demo=passage`.
+
 ## What's in v0.7 (16 September 2026)
 
 - **The sentence.** After every session the pupil writes (or dictates) what they worked on and what changed. "Done for today" stays off until there is a real sentence, and the day's token, coin and streak arrive with the sentence, not the tick. Close the app without writing it and Today shows "Day N isn't finished" until you do.
@@ -42,7 +52,7 @@ Stuckato has two sides. The **teacher** writes a thirty-second note after each l
 - **Stages to the goal are the teacher's, or absent.** The trail shows the weeks to the date as a stave; named stages (Foundations, Pieces, Polish…) appear only if the teacher types them into the pupil's profile. The app does not invent a syllabus
 - **The month and the goal.** Today shows one chip with the goal and weeks to go, when there is one. The trail and the teacher's pupil page stack the last five weeks as small staves, most recent first, with the goal date under them. The road on the trail draws the same stave above the stages
 - **How it felt: Easy, Fine, Hard.** One axis, three taps. Hard asks one more thing, "which bit?", from the work list; that answer goes to the teacher as a flag for the next lesson. Easy and Fine ask nothing more
-- **The planner does not teach.** The only technical content in a session is what the teacher wrote, restated in her words and attributed; where the note says nothing for a step, the caption is about how to practise (slowly, once through, stop), not how to play. The app never claims to hear the pupil; the pupil and the teacher judge
+- **The planner does not teach.** The only technical content in a session is what the teacher wrote, restated in her words and attributed; where the note says nothing for a step, the caption is about how to practise (slowly, once through, stop), not how to play. The app never claims to judge the pupil: where it listens (the week's passage), it points at the bars that differ from the teacher's playing, and the pupil and the teacher judge
 - **This week, from the teacher** on Today shows the work for the week (her "know by next lesson" list) first, then her one line
 
 ## Later
@@ -68,7 +78,7 @@ Stuckato has two sides. The **teacher** writes a thirty-second note after each l
 - **Share card:** the pupil turns their week into an image (sessions, minutes, streak, checklist, the teacher's line) and shares it with a parent or anyone they choose, from their own phone. Nothing is shared unless the pupil sends it; nothing else about them is in it
 - Works on this device with no account, so anyone can try the whole loop alone (you play both sides)
 
-Nothing listens to you play. That's the argument, not an omission.
+Nothing scores you. Where the app listens (v0.8's passage), it compares you to your teacher and hands her the spots. That's the argument, not an omission.
 
 ## Accounts, children and consent
 
@@ -82,6 +92,7 @@ Two kinds of account: teacher and pupil. There is no parent login. A young pupil
 - `api/speak.js`: turns one caption into audio in the studio's voice and stores it in the `melodigo-audio` bucket under the studio's folder, using the teacher's own session so storage policies apply
 - `api/transcribe.js`: spoken notes to text (ElevenLabs Scribe) for browsers without built-in dictation
 - `api/reminders.js`: the morning message. GET from the cron (Authorization: Bearer CRON_SECRET) sends to every pupil due; POST from a signed-in pupil sends their own message now. Uses the Supabase service-role key server-side to read every pupil row
+- `passage.js`: the week's passage, pure functions with no DOM: resample to 16 kHz, McLeod pitch tracking (normalised square difference), frames to notes with repeated-note splitting, Needleman-Wunsch alignment of the two note lists, and the comparison that yields the spots. Runs in the browser on the recording device; imported under Node by the tests
 - `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`: the installable app and its notifications
 - `api/config.js`: public Supabase config for the page, plus which features are configured
 - `supabase/schema.sql`: studios, members, one JSON document per pupil that the pupil and their teacher can both read and write, row-level security, the RPCs. Every database object is prefixed `practicigo_` (renamed from `melodigo_` on 16 September 2026 by `supabase/migrate-practicigo.sql`; the audio bucket keeps its id `melodigo-audio` because stored caption and recording URLs embed it).
@@ -107,10 +118,12 @@ Supabase: run `supabase/schema.sql` in the SQL editor once; under Authentication
 
 Open `index.html` in a browser and choose "Try it on this device". Accounts and the generated weeks need the deployed functions; the file version writes a plain placeholder week so the loop can still be walked through.
 
+`npm test` runs the unit tests for `passage.js` (Node 22 or later, no dependencies).
+
 ## Roadmap
 
 1. Pilot with twenty pupils and one ensemble; measure who is still practising in week four
-2. Record a clip at the end of a session and send it to the teacher, unscored
+2. The week's passage against a MusicXML file when the teacher has no time to record; a photo of the score later, with a confirm step, once the recorded version has proved itself
 3. Custom SMTP for sign-in emails; a daily cap on generation per studio; the morning message as a voice note in the teacher's voice, and over WhatsApp
 4. Piano and singing programmes; returning-adult track; sectionals (one note per part) for larger ensembles
 5. Studio and ensemble licences for schools, youth orchestras, choirs and music hubs
