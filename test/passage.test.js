@@ -36,10 +36,19 @@ test('a high violin note is tracked', () => {
   assert.deepEqual(n.map(x => x.m), [88, 86]);
 });
 
-test('repeated notes with a gap between them stay separate', () => {
-  const s = P.synthNotes([{ m: 62, d: 0.4 }, { m: 0, d: 0.12 }, { m: 62, d: 0.4 }], SR); // m 0 = silence
-  const n = P.notesFrom(P.pitchTrack(s, SR));
-  assert.deepEqual(n.map(x => x.m), [62, 62]);
+test('repeated notes with a short gap between them stay separate', () => {
+  for (const gap of [0.12, 0.04]) {
+    const s = P.synthNotes([{ m: 62, d: 0.4 }, { m: 0, d: gap }, { m: 62, d: 0.4 }], SR); // m 0 = silence
+    const n = P.notesFrom(P.pitchTrack(s, SR));
+    assert.deepEqual(n.map(x => x.m), [62, 62], 'gap ' + gap);
+  }
+});
+
+test('Twinkle, all repeated notes, comes out note for note', () => {
+  const TW = [62, 62, 69, 69, 71, 71, 69, 67, 67, 66, 66, 64, 64, 62];
+  const parts = []; TW.forEach(m => { parts.push({ m, d: 0.44 }); parts.push({ m: 0, d: 0.06 }); });
+  const n = P.notesFrom(P.pitchTrack(P.synthNotes(parts, SR), SR));
+  assert.deepEqual(n.map(x => x.m), TW);
 });
 
 test('align: substitution, deletion, insertion', () => {

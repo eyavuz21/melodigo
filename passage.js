@@ -54,7 +54,8 @@
     return frames;
   }
 
-  // Frames to notes: voiced frames (clear, loud enough) to fractional MIDI, median-smoothed, runs of one pitch merged.
+  // Frames to notes: voiced frames (clear, loud enough) to fractional MIDI, median-smoothed, runs of one pitch merged,
+  // split again where the loudness dips and recovers on the same pitch (a repeated note).
   function notesFrom(frames, o) {
     o = o || {}; const minC = o.minClarity == null ? 0.9 : o.minClarity, minDur = o.minDur == null ? 0.08 : o.minDur, bridge = o.bridge == null ? 2 : o.bridge;
     if (!frames.length) return [];
@@ -64,14 +65,16 @@
     const mf = frames.map(f => (f.f > 0 && f.clarity >= minC && f.rms >= floor) ? midiOf(f.f) : null);
     // median of five over voiced neighbours
     const sm = mf.map((v, i) => { if (v == null) return null; const w = []; for (let j = i - 2; j <= i + 2; j++) if (mf[j] != null) w.push(mf[j]); w.sort((a, b) => a - b); return w[Math.floor(w.length / 2)]; });
-    const notes = []; let cur = null, gap = 0;
+    const notes = []; let cur = null, gap = 0, peak = 0; const dip = o.dip == null ? 0.6 : o.dip;
     const close = () => { if (cur) { cur.d = cur.end - cur.t; cur.cents = Math.round(100 * (cur.sum / cur.n - cur.m)); delete cur.sum; delete cur.n; delete cur.end; if (cur.d >= minDur) notes.push(cur); } cur = null; };
     for (let i = 0; i < sm.length; i++) {
-      const v = sm[i], t = frames[i].t;
+      const v = sm[i], t = frames[i].t, r = frames[i].rms;
       if (v == null) { if (cur && ++gap > bridge) close(); continue; }
       gap = 0; const m = Math.round(v);
-      if (cur && cur.m === m) { cur.end = t + hop; cur.sum += v; cur.n++; }
-      else { close(); cur = { m, t, end: t + hop, sum: v, n: 1 }; }
+      // a repeated note: the same pitch again after the loudness dips and comes back (a bow change, a re-struck key, tonguing)
+      const valley = cur && cur.m === m && r < dip * peak && i + 1 < sm.length && frames[i + 1].rms > r;
+      if (cur && cur.m === m && !valley) { cur.end = t + hop; cur.sum += v; cur.n++; if (r > peak) peak = r; }
+      else { close(); cur = { m, t, end: t + hop, sum: v, n: 1 }; peak = r; }
     }
     close();
     return notes;
