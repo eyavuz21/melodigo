@@ -617,7 +617,8 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   const takeOff=t=>t&&t.diff?(t.diff.wrong||0)+(t.diff.missing||0)+(t.diff.extra||0):null;
   function takesOff(w){ return (w&&w.takes||[]).map(t=>({i:t.i, off:takeOff(t), at:t.at})).sort((a,b)=>a.i-b.i); }
   function latestTake(w){ return (w&&w.takes||[]).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')).pop()||null; }
-  function stillDiffersLine(w){ const t=latestTake(w); if(!t||!t.diff||!t.diff.spots.length) return ''; const day=fmt((t.at||'').slice(0,10)).split(' ')[0];
+  const dayName=iso=>{ try{ const [y,m,d]=String(iso).slice(0,10).split('-'); return new Date(+y,+m-1,+d).toLocaleDateString('en-GB',{weekday:'long'}); }catch(e){ return ''; } };
+  function stillDiffersLine(w){ const t=latestTake(w); if(!t||!t.diff||!t.diff.spots.length) return ''; const day=dayName(t.at);
     return `The passage: still differs at ${t.diff.spots.map(sp=>Passage.fmtT(sp.t)).join(', ')} on ${day}'s take.`; }
   function trendHTML(w){ // the week's days as chips: notes off per take, a dot for days without one
     if(!w||!w.sessions) return ''; const by={}; takesOff(w).forEach(x=>by[x.i]=x.off);
@@ -647,21 +648,21 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
           <div class="row" style="margin-top:8px"><button class="btn sm ${t.heard?'':'quiet'}" data-pgheard="${k}">${t.heard?'Heard it ✓':'Heard it'}</button><button class="btn sm quiet" data-pgask="${k}">Ask them</button></div></div>`; }).join('')}`
         :`<div class="note">No take yet. After a session ${h(p.name||'the pupil')} records these bars; each day's take appears here with the spots to listen to.</div>`}</div>`;
   }
-  let pgBlob=null, pgNotes=null, pgStartedAt=0, pgCap=null;
+  let pgBlob=null, pgNotes=null, pgSeconds=0, pgCap=null;
   function wirePassageTeacher(w, d, p){
     const rb=$('#pgRec'); const a=$('#pgAudio'); const st=$('#pgStatus');
     if(rb){
       rb.onclick=async()=>{
-        if(rec){ clearTimeout(pgCap); rb.disabled=true; st.textContent='Listening…'; try{ pgBlob=await recordStop(); const r=await analyseBlob(pgBlob); pgNotes=r.notes; a.src=URL.createObjectURL(pgBlob);
+        if(rec){ clearTimeout(pgCap); rb.disabled=true; st.textContent='Listening…'; try{ pgBlob=await recordStop(); const r=await analyseBlob(pgBlob); pgNotes=r.notes; pgSeconds=r.seconds; a.src=URL.createObjectURL(pgBlob);
             if(pgNotes.length<4){ st.textContent=`Too few notes heard (${pgNotes.length}). Try again nearer the phone, one note at a time.`; pgBlob=null; rb.textContent='Record'; }
             else { st.textContent=`${pgNotes.length} notes heard in ${r.seconds} seconds. Listen back, then save.`; rb.textContent='Record again'; $('#pgPlay').hidden=false; $('#pgSave').hidden=false; } }
           catch(e){ st.textContent=e.message||String(e); rb.textContent='Record'; } finally{ rb.disabled=false; } return; }
-        try{ await recordStart(); pgStartedAt=Date.now(); rb.textContent='Stop'; $('#pgPlay').hidden=true; $('#pgSave').hidden=true; a.hidden=true; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; pgCap=setTimeout(()=>rb.onclick(), 60*1000); }
+        try{ await recordStart(); rb.textContent='Stop'; $('#pgPlay').hidden=true; $('#pgSave').hidden=true; a.hidden=true; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; pgCap=setTimeout(()=>rb.onclick(), 60*1000); }
         catch(e){ st.textContent='Microphone not available: '+(e.message||e); } };
       $('#pgPlay').onclick=()=>{ a.hidden=false; a.play().catch(()=>{}); };
       $('#pgSave').onclick=async()=>{ if(!pgBlob||!pgNotes) return; const b=$('#pgSave'); b.disabled=true; st.textContent='Saving…';
         try{ const up=await uploadAudio(pgBlob, sbUser?`${me.studio_id}/passages/${current.user_id}/${w.id||w.createdAt}.${audioExt(pgBlob)}`:'');
-          w.passage={id:uid(), at:new Date().toISOString(), by:me?.name||'', seconds:Math.round((Date.now()-pgStartedAt)/1000), mime:pgBlob.type, label:$('#pgLabel').value.trim(), notes:pgNotes, v:1, ...up}; w.takes=[];
+          w.passage={id:uid(), at:new Date().toISOString(), by:me?.name||'', seconds:pgSeconds, mime:pgBlob.type, label:$('#pgLabel').value.trim(), notes:pgNotes, v:1, ...up}; w.takes=[];
           saveCurrent(); pgBlob=null; pgNotes=null; toast('Saved. It is on '+(p.name||'the pupil')+"'s trail."); renderTStudent(); }
         catch(e){ b.disabled=false; st.textContent='Could not save: '+(e.message||e); } };
     }
@@ -679,13 +680,18 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       <p class="note" id="ppStatus" style="margin:8px 0 0">${src?'':'The sound was recorded on another device, so only the notes are here. '}The same bars, once, up to thirty seconds. Then Stuckato shows you where yours differ from ${h(tn)}'s.</p>
       ${src?`<audio id="pgAudio" src="${h(src)}" hidden></audio>`:''}<audio id="ppMine" hidden></audio>
       <div id="ppResult"></div>
+      ${(()=>{ const t=latestTake(w); if(!t||!t.diff) return ''; const sp=t.diff.spots; return `<div class="label" style="margin-top:10px">${t.at.slice(0,10)===today()?'Today\'s take':dayName(t.at)+'\'s take'} · ${h(timeOf(t.at))}</div><p style="margin:4px 0 6px">Stuckato thinks <b>${t.diff.matched} of ${t.diff.total}</b> notes matched ${h(tn)}'s.${sp.length?` Have a listen at ${sp.map(x=>Passage.fmtT(x.t)).join(' and ')}.`:' Nothing to point at.'}${t.heard?` ${h(tn)} has heard it.`:''}</p>
+        ${sp.length?`<div class="chips" style="margin:0 0 6px">${sp.map((x,k)=>`<button type="button" class="chip" data-lspot="${k}">${Passage.fmtT(x.t)}</button>`).join('')}</div><div id="lpSpot"></div>`:''}${takeSrc(t)?`<audio id="lpMine" src="${h(takeSrc(t))}" hidden></audio>`:''}`; })()}
       ${takes.length?`<div class="label" style="margin-top:10px">This week · notes that differed</div>${trendHTML(w)}`:''}
       <div class="note" style="margin:8px 0 0">Stuckato hears roughly. ${h(tn)} decides.</div></div>`;
   }
-  let ppBlob=null, ppDiff=null, ppNotes=null, ppStartedAt=0, ppCap=null;
+  let ppBlob=null, ppDiff=null, ppNotes=null, ppSeconds=0, ppCap=null;
   function wirePassagePupil(w, tn){
     const rb=$('#ppRec'); if(!rb) return; const st=$('#ppStatus'), ref=$('#pgAudio'), mine=$('#ppMine'), res=$('#ppResult');
     const pp=$('#ppPlay'); if(pp) pp.onclick=()=>slowPlay(ref,false); const ps=$('#ppSlow'); if(ps) ps.onclick=()=>slowPlay(ref,true);
+    const lt=latestTake(w); $$('[data-lspot]').forEach(b=>b.onclick=()=>{ $$('[data-lspot]').forEach(x=>x.classList.toggle('on',x===b)); const x=lt.diff.spots[+b.dataset.lspot]; const lm=$('#lpMine');
+      $('#lpSpot').innerHTML=`<div class="flag"><span>${Passage.fmtT(x.t)} · ${h(spotText(x))}</span><span class="row" style="gap:6px;flex:none">${ref?`<button class="btn sm quiet" id="lpHers">Hers</button><button class="btn sm quiet" id="lpLoop">Loop hers</button>`:''}${lm?`<button class="btn sm quiet" id="lpMineBtn">Mine</button>`:''}</span></div>`;
+      const hb=$('#lpHers'); if(hb) hb.onclick=()=>playSpan(ref,x.t,x.te,1); const lb=$('#lpLoop'); if(lb) lb.onclick=()=>playSpan(ref,x.t,x.te,3); const mb=$('#lpMineBtn'); if(mb) mb.onclick=()=>playSpan(lm,x.tp,x.tp+spanLen(x),1); });
     const showResult=()=>{ const c=ppDiff; const sp=c.spots;
       res.innerHTML=`<p style="margin:10px 0 6px">Stuckato thinks <b>${c.matched} of ${c.total}</b> notes matched ${h(tn)}'s.${sp.length?` Have a listen at ${sp.map(x=>Passage.fmtT(x.t)).join(' and ')}.`:' Nothing to point at.'}</p>
         ${sp.length?`<div class="chips" style="margin:0 0 6px">${sp.map((x,k)=>`<button type="button" class="chip" data-spot="${k}">${Passage.fmtT(x.t)}</button>`).join('')}</div><div id="ppSpot"></div>`:''}
@@ -696,15 +702,15 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
       $('#ppAgain').onclick=()=>{ ppBlob=null; ppDiff=null; res.innerHTML=''; rb.textContent='Record mine'; st.textContent='Ready when you are.'; };
       $('#ppSend').onclick=async()=>{ if(!ppBlob||!ppDiff) return; const b=$('#ppSend'); b.disabled=true; st.textContent='Sending…';
         try{ const i=takeDayIndex(w); const up=await uploadAudio(ppBlob, sbUser?`${me.studio_id}/passages/${sbUser.id}/${w.id||w.createdAt}-d${i}.${audioExt(ppBlob)}`:'');
-          const take={i, at:new Date().toISOString(), seconds:Math.round((Date.now()-ppStartedAt)/1000), mime:ppBlob.type, notes:ppNotes, diff:ppDiff, ...up};
+          const take={i, at:new Date().toISOString(), seconds:ppSeconds, mime:ppBlob.type, notes:ppNotes, diff:ppDiff, ...up};
           w.takes=(w.takes||[]).filter(t=>t.i!==i); w.takes.push(take); saveCurrent(); ppBlob=null; ppDiff=null; toast('Sent to '+tn+'.'); renderTrail(false); const c=$('#pgCard'); if(c) c.scrollIntoView({block:'center'}); }
         catch(e){ b.disabled=false; st.textContent='Could not send: '+(e.message||e); } }; };
     rb.onclick=async()=>{
-      if(rec){ clearTimeout(ppCap); rb.disabled=true; st.textContent='Listening…'; try{ ppBlob=await recordStop(); const r=await analyseBlob(ppBlob); ppNotes=r.notes; mine.src=URL.createObjectURL(ppBlob);
+      if(rec){ clearTimeout(ppCap); rb.disabled=true; st.textContent='Listening…'; try{ ppBlob=await recordStop(); const r=await analyseBlob(ppBlob); ppNotes=r.notes; ppSeconds=r.seconds; mine.src=URL.createObjectURL(ppBlob);
           if(ppNotes.length<4){ st.textContent=`Too few notes heard (${ppNotes.length}). Try again nearer the phone, one note at a time.`; ppBlob=null; rb.textContent='Record mine'; }
           else { ppDiff=Passage.compare(w.passage.notes, ppNotes); st.textContent=`${r.seconds} seconds. Listen, then send it to ${tn}, or record again.`; rb.textContent='Record again'; showResult(); } }
         catch(e){ st.textContent=e.message||String(e); rb.textContent='Record mine'; } finally{ rb.disabled=false; } return; }
-      try{ try{ ref&&ref.pause(); }catch(e){} await recordStart(); ppStartedAt=Date.now(); rb.textContent='Stop'; res.innerHTML=''; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; ppCap=setTimeout(()=>rb.onclick(), 30*1000); }
+      try{ try{ ref&&ref.pause(); }catch(e){} await recordStart(); rb.textContent='Stop'; res.innerHTML=''; st.textContent='Recording. Play the passage once; tap Stop when you finish.'; ppCap=setTimeout(()=>rb.onclick(), 30*1000); }
       catch(e){ st.textContent='Microphone not available: '+(e.message||e); } };
   }
   function renderJourney(showIt){ renderTrail(showIt); }
@@ -727,8 +733,9 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const wrap=(t,x,y,mw,lh,font,col)=>{ const ls=lines(t,mw,font); ctx.font=font; ctx.fillStyle=col; ls.forEach((l,i)=>ctx.fillText(l,x,y+i*lh)); return y+ls.length*lh; };
     const box=(y,hh)=>{ ctx.fillStyle='#000000'; ctx.strokeStyle='#3A3327'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(40,y,W-80,hh,26); ctx.fill(); ctx.stroke(); };
     const label=(t,y)=>{ ctx.fillStyle='#B3A48C'; ctx.font=F(800,18); ctx.fillText(t.toUpperCase(),70,y); };
-    const tks=w?takesOff(w).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')):[]; const pgLine=tks.length?(()=>{ const L=tks[tks.length-1], F=tks[0]; const tot=(w.takes||[]).find(t=>t.i===L.i)?.diff?.total||''; const dn=at=>fmt((at||'').slice(0,10)).split(' ')[0]; return `The passage: ${tot-L.off} of ${tot} notes matched ${tn}'s on ${dn(L.at)}`+(tks.length>1?`, up from ${tot-F.off} on ${dn(F.at)}.`:'.'); })():'';
-    const top=490+(pgLine?40:0); const fb=w&&(w.line||w.encouragement); const list=w&&w.checklist?w.checklist.slice(0,4):[];
+    const tks=w?takesOff(w).slice().sort((a,b)=>(a.at||'').localeCompare(b.at||'')):[]; const pgLine=tks.length?(()=>{ const L=tks[tks.length-1], F=tks[0]; const tot=(w.takes||[]).find(t=>t.i===L.i)?.diff?.total||''; const dn=dayName; return `The passage: ${tot-L.off} of ${tot} notes matched ${tn}'s on ${dn(L.at)}`+(tks.length>1?`, up from ${tot-F.off} on ${dn(F.at)}.`:'.'); })():'';
+    const pgLines=pgLine?lines(pgLine,W-140,F(600,20)):[]; const pgExtra=pgLines.length?14+pgLines.length*26:0;
+    const top=490+pgExtra; const fb=w&&(w.line||w.encouragement); const list=w&&w.checklist?w.checklist.slice(0,4):[];
     let hh=42; if(fb) hh+=36+lines(fb,W-140,F(700,28)).length*38+40; if(list.length){ hh+=36; list.forEach(t=>hh+=lines(t,W-180,F(600,24)).length*30+8); } if(!fb&&!list.length) hh+=40; hh+=18;
     const goal=p.goalDate&&doc().weeks.length?{label:p.goalLabel||'Goal', date:p.goalDate, start:(doc().weeks[0].lessonDate||doc().weeks[0].createdAt)}:null;
     const H=top+hh+40+(goal?200:0); if(c.height!==H) c.height=H;
@@ -741,11 +748,11 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     box(40,120); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,34); ctx.fillText('Stuckato.',70,92); ctx.font=F(700,26); ctx.fillText('From '+from+(to?' to '+to:''),70,136);
     if(gl){ ctx.font=F(800,22); const tw=ctx.measureText(gl.word).width+36; ctx.fillStyle=WASH[2]; ctx.beginPath(); ctx.roundRect(W-70-tw,68,tw,40,20); ctx.fill(); ctx.fillStyle='#000000'; ctx.fillText(gl.word,W-70-tw+18,96); }
     // box 2: the pupil's week
-    let y=190; box(y,270+(pgLine?40:0)); label((p.name||'My')+"'s week",y+42);
+    let y=190; box(y,270+pgExtra); label((p.name||'My')+"'s week",y+42);
     ctx.fillStyle='#F5E4CA'; ctx.font=F(800,52); ctx.fillText(w&&n===tot?'Week complete.':(n+' of '+tot+' days done.'),70,y+106);
     const stats=[[String(n)+'/'+tot,'days practised'],[String(mins),'minutes practised'],[String(tokensView().avail),'points earned']];
     stats.forEach((st,i)=>{ const x=70+i*236; ctx.fillStyle='#17130C'; ctx.beginPath(); ctx.roundRect(x,y+132,216,108,18); ctx.fill(); ctx.fillStyle='#F5E4CA'; ctx.font=F(800,44); ctx.fillText(st[0],x+20,y+188); ctx.fillStyle='#B3A48C'; ctx.font=F(600,18); ctx.fillText(st[1],x+20,y+222); });
-    if(pgLine){ ctx.fillStyle='#B3A48C'; ctx.font=F(600,20); ctx.fillText(pgLine,70,y+284); }
+    if(pgLines.length){ ctx.fillStyle='#B3A48C'; ctx.font=F(600,20); pgLines.forEach((l,k)=>ctx.fillText(l,70,y+280+k*26)); }
     // box 3: feedback from the last lesson, and what is wanted for the next one
     box(top,hh); y=top+42;
     if(fb){ label('Feedback from the last lesson',y); y=wrap(fb,70,y+36,W-140,38,F(700,28),'#F5E4CA'); ctx.fillStyle='#B3A48C'; ctx.font=F(600,19); ctx.fillText(tn,70,y-4); y+=40; }
@@ -1143,6 +1150,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
     const tom={profile:{name:'Tom',instrument:'violin',part:'First violin',level:'returning',goalLabel:'',goalDate:'',sessionsPerWeek:7,minutes:25},teacherName:'Melisande',notes:[],flags:[],extras:[],tokens:{earned:0,redeemed:0},weeks:[]};
     return [{user_id:'demo-emre',data:emre},{user_id:'demo-aisha',data:aisha},{user_id:'demo-tom',data:tom}];
   }
+  if(new URLSearchParams(location.search).has('demo')) window.__analyseBlob=analyseBlob; // for the browser test only
   let demoRole='pupil';
   function enterDemo(){
     mode='demo'; me={role:'teacher', name:'Melisande', studio:"Melisande's pupils", code:'DEMO01', studio_id:'demo', voice_ready:false};
@@ -1214,7 +1222,7 @@ canvas.cardc{width:100%; max-width:420px; border-radius:16px; border:1px solid v
   // deep link into the demo: ?demo=pupil|teacher|group|lessons|journey|goal|share (nothing is saved)
   (function(){ const q=new URLSearchParams(location.search).get('demo'); if(!q) return; enterDemo();
     const v=q.toLowerCase(); const wait=ms=>new Promise(r=>setTimeout(r,ms));
-    wait(50).then(()=>{ if(v==='teacher'){ setDemoRole('teacher'); } else if(v==='group'){ setDemoRole('teacher'); renderGroup(); } else if(v==='message'){ setDemoRole('teacher'); renderMessage(); } else if(v==='share'){ setDemoRole('share'); } else if(v==='pupilpage'){ setDemoRole('teacher'); current=students[0]; renderTStudent(); show('tstudent'); } else { setDemoRole('pupil'); if(v==='journey') renderJourney(); else if(v==='goal') renderGoal(); else if(v==='done'){ const w=week(); si=nextIndex(w); sess=w.sessions[si]; finish(true); } else if(v==='fermata'){ $('#fermata').classList.add('on'); } else if(v==='pupil2'){ current=students[1]; renderToday(); } } }); })();
+    wait(50).then(()=>{ if(v==='teacher'){ setDemoRole('teacher'); } else if(v==='group'){ setDemoRole('teacher'); renderGroup(); } else if(v==='message'){ setDemoRole('teacher'); renderMessage(); } else if(v==='share'){ setDemoRole('share'); } else if(v==='pupilpage'){ setDemoRole('teacher'); current=students[0]; renderTStudent(); show('tstudent'); } else { setDemoRole('pupil'); if(v==='journey') renderJourney(); else if(v==='goal') renderGoal(); else if(v==='done'){ const w=week(); si=nextIndex(w); sess=w.sessions[si]; finish(true); } else if(v==='fermata'){ $('#fermata').classList.add('on'); } else if(v==='pupil2'){ current=students[1]; renderToday(); } else if(v==='passage'){ renderToday(); const c=$('#pgCard'); if(c) wait(100).then(()=>c.scrollIntoView({block:'start'})); } } }); })();
 })();
 </script>
 </body>
